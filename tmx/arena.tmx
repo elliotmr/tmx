@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" tiledversion="1.0.3" orientation="orthogonal" renderorder="right-down" width="30" height="30" tilewidth="16" tileheight="16" nextobjectid="7">
+ <tileset firstgid="1" name="grass-sand" tilewidth="16" tileheight="16" spacing="1" margin="1" tilecount="165" columns="15">
+  <image source="../../../../../../Cocos/TestCocos/TestCocos/Resources/maps/grass-sand.png" trans="000000" width="265" height="199"/>
+  <terraintypes>
+   <terrain name="Sand" tile="16"/>
+   <terrain name="Grass" tile="34"/>
+  </terraintypes>
+  <tile id="0" terrain="1,1,1,0"/>
+  <tile id="1" terrain="1,1,0,0"/>
+  <tile id="2" terrain="1,1,0,1"/>
+  <tile id="3" terrain="0,0,0,1"/>
+  <tile id="4" terrain="0,0,1,0"/>
+  <tile id="15" terrain="1,0,1,0"/>
+  <tile id="16" terrain="0,0,0,0"/>
+  <tile id="17" terrain="0,1,0,1"/>
+  <tile id="18" terrain="0,1,0,0"/>
+  <tile id="19" terrain="1,0,0,0"/>
+  <tile id="30" terrain="1,0,1,1"/>
+  <tile id="31" terrain="0,0,1,1"/>
+  <tile id="32" terrain="0,1,1,1"/>
+  <tile id="33" terrain="0,0,0,0"/>
+  <tile id="34" terrain="1,1,1,1"/>
+  <tile id="49" terrain=",1,,"/>
+ </tileset>
+ <imagelayer name="Image Layer 1" offsetx="325" offsety="299.5">
+  <image source="../../../../../../Cocos/TestCocos/TestCocos/Resources/maps/grass-sand.png" width="265" height="199"/>
+ </imagelayer>
+ <layer name="Tile Layer 1" width="30" height="30">
+  <data encoding="base64" compression="zlib">
+   eJzlVssOwjAMK4/dB9ud0f3/P1KkRDImSdtNICQOEWJdY8dx060ppfXH41DiKHH6Iu5YIktMwOETPLDGucRFIlMwj718RsE5l1hKDIKD/y0eWZ5PjdhYH9Z4Ja0nWs+ybvGpYR8kD/LNBu6F3sH3FGN09keaRv2bCQ9zI/a8Adeq1+JiaWpp8XzvXsFlPAtDn63p3eeeVlF/8XwitvLF/rPGkad7dMY8V8Cs5bfq7vEV7kOfeHViL4f0qtXS0V/db/mE50jkZT0HLf1VXW6Ql2vjOeJp3nuOOK+lPZ9n/GX/13CRH88vC9+bXcwrwlVdLS95c7Hm45Zz5OnKmnn+ivSO/Mw1c69vkkNx1L9HWVcc3N96D1pzyzoLyI/nEvqzNpujmtkreDcjrmLg/Kn1tXYnen7CfvC3QE+t3p3Icw977PHprRW15nOBvUZNkI9Gb62IjbXxnYpzeEttPRys78ctfdyjwV49/yke1gxe1Q==
+  </data>
+ </layer>
+ <objectgroup name="Object Layer 1">
+  <object id="1" name="Diamond" x="285.187" y="243.994" width="52" height="38" rotation="-45.079"/>
+  <object id="2" name="Sign" type="blah" x="82.5" y="171.5" width="83" height="19">
+   <text wrap="1">Hello World</text>
+  </object>
+  <object id="6" x="170.25" y="231.5">
+   <polyline points="0,0 32.75,15.25 7.25,37 -63.75,51.25 -63.25,-20.75 -12,-21.25 -11,1"/>
+  </object>
+ </objectgroup>
+</map>
