@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"io"
 	"github.com/pkg/errors"
+	"os"
 )
 
 type Map struct {
@@ -188,9 +189,26 @@ type Property struct {
 
 // TODO: Add template groups
 
+
+// Load parses a tmx file into a new tmx.Map object, it will also parse any
+// tsx tileset files that are referenced.
 func Load(r io.Reader) (*Map, error) {
 	decoder := xml.NewDecoder(r)
 	tmxMap := &Map{}
 	err := decoder.Decode(tmxMap)
+	for _, ts := range tmxMap.TileSets {
+		if ts.Source != "" {
+			tsxFile, err := os.Open(ts.Source)
+			if err != nil {
+				return nil, errors.Wrap(err, "unable to open tileset source file")
+			}
+			d := xml.NewDecoder(tsxFile)
+			err = d.Decode(ts)
+			tsxFile.Close()
+			if err != nil {
+				return nil, errors.Wrap(err, "unable to decode tileset source file")
+			}
+		}
+ 	}
 	return tmxMap, errors.Wrap(err, "unable to decode tmx map")
 }
