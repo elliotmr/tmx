@@ -1,6 +1,7 @@
 package pixelmap
 
 import (
+	"fmt"
 	"image"
 	"os"
 
@@ -9,17 +10,16 @@ import (
 	"github.com/elliotmr/tiled/tmx"
 	"github.com/faiface/pixel"
 	"github.com/pkg/errors"
-	"fmt"
 )
 
 type TileSetEntry struct {
-	data *pixel.TrianglesData
+	data     *pixel.TrianglesData
 	firstGID uint32
 }
 
 type TileSets struct {
 	entries map[uint32]TileSetEntry
-	pics map[uint32]pixel.Picture
+	pics    map[uint32]pixel.Picture
 }
 
 func (ts *TileSets) FillTileAndMove(id uint32, vec pixel.Vec, t pixel.Triangles) {
@@ -37,7 +37,7 @@ func (ts *TileSets) FillTileAndMove(id uint32, vec pixel.Vec, t pixel.Triangles)
 func LoadTileSets(mapData *tmx.Map) (*TileSets, error) {
 	ts := &TileSets{
 		entries: make(map[uint32]TileSetEntry),
-		pics: make(map[uint32]pixel.Picture),
+		pics:    make(map[uint32]pixel.Picture),
 	}
 	for _, set := range mapData.TileSets {
 		imageFile, err := os.Open(set.Image.Source)
@@ -71,7 +71,7 @@ func LoadTileSets(mapData *tmx.Map) (*TileSets, error) {
 				return nil, errors.Errorf("tile %d bounds outside of texture bounds (%f, %f, %f, %f)", t.ID, minX, minY, maxX, maxY)
 			}
 			ts.entries[t.ID+set.FirstGID] = TileSetEntry{
-				data: createTriangleData(pixel.R(minX, minY, maxX, maxY)),
+				data:     createTriangleData(pixel.R(minX, minY, maxX, maxY)),
 				firstGID: set.FirstGID,
 			}
 		}

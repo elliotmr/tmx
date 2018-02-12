@@ -1,16 +1,16 @@
 package main
 
 import (
+	"fmt"
+	"math"
 	"os"
+	"time"
 
 	"github.com/elliotmr/tiled/pixelmap"
 	"github.com/elliotmr/tiled/tmx"
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
-	"github.com/pkg/profile"
 	"golang.org/x/image/colornames"
-	"time"
-	"fmt"
 )
 
 func run() {
@@ -43,35 +43,30 @@ func run() {
 	}
 
 	win.SetSmooth(false)
+
 	cameraOrigin := pixel.ZV
+	scale := 1.0
 	dragOrigin := pixel.V(0, 0)
 	second := time.Tick(time.Second)
+	viewMatrix := pixel.IM
 	frames := 0
 	for !win.Closed() {
-		if win.JustPressed(pixelgl.MouseButton1) {
-			dragOrigin = win.MousePosition()
-		} else if win.Pressed(pixelgl.MouseButton1) {
-			cameraOrigin = cameraOrigin.Sub(win.MousePosition().Sub(dragOrigin))
-			dragOrigin = win.MousePosition()
+		if win.MouseScroll().Y != 0 {
+			factor := math.Pow(1.2, win.MouseScroll().Y)
+			zoomDeltaStart := cameraOrigin.Sub(win.Bounds().Center().Sub(win.MousePosition().Scaled(1 / scale)))
+			scale *= factor
+			cameraOrigin = zoomDeltaStart.Add(win.Bounds().Center().Sub(win.MousePosition().Scaled(1 / scale)))
 		}
-		cam := pixel.IM.Moved(win.Bounds().Center().Sub(cameraOrigin))
-		win.SetMatrix(cam)
-
+		if win.JustPressed(pixelgl.MouseButton1) {
+			dragOrigin = win.MousePosition().Scaled(1 / scale)
+		} else if win.Pressed(pixelgl.MouseButton1) {
+			newOrigin := win.MousePosition().Scaled(1 / scale)
+			cameraOrigin = cameraOrigin.Sub(newOrigin.Sub(dragOrigin))
+			dragOrigin = newOrigin
+		}
+		viewMatrix = pixel.IM.Moved(win.Bounds().Center().Sub(cameraOrigin)).Scaled(pixel.ZV, scale)
 		win.Clear(colornames.Whitesmoke)
-		//iter, err := baseLayer.Data.Iter()
-		//if err != nil {
-		//	panic(err)
-		//}
-		//for iter.Next() {
-		//	cellSprite := pixel.NewSprite(tsr.GetCellFromGID(iter.Get().GID))
-		//	vx := float64(iter.GetIndex()%mapData.Width) * float64(mapData.TileWidth)
-			// we have to flip the row index because pixel and tmx have opposite y dim definitions
-		//	vy := float64(mapData.Height-iter.GetIndex()/mapData.Width) * float64(mapData.TileHeight)
-		//	cellSprite.Draw(win, pixel.IM.Moved(pixel.V(vx, vy)).Scaled(pixel.ZV, 2))
-		//}
-		//if iter.Error() != nil {
-		//	panic(iter.Error())
-		//}
+		win.SetMatrix(viewMatrix)
 		ld.Draw(win)
 		win.Update()
 		frames++
@@ -85,6 +80,5 @@ func run() {
 }
 
 func main() {
-	defer profile.Start().Stop()
 	pixelgl.Run(run)
 }
