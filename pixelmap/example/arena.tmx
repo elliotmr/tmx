@@ -25,14 +25,14 @@
  <imagelayer name="Image Layer 1" offsetx="325" offsety="299.5">
   <image source="grass-sand.png" width="86" height="52"/>
  </imagelayer>
- <layer name="Tile Layer 1" width="30" height="30">
+ <layer name="Tile Layer 1" width="30" height="30" opacity="0.8" offsetx="0" offsety="-20">
   <data encoding="base64" compression="zlib">
-   eJzllutuwjAMhQsbhRYo7/+2BCmWvh3ZTtOKCYkfFmJrfS4+cXgMw/D48DqUOtb6+UfcsdRSawKHd/CgxrnUudYipTz28hkrzm+pW6lTxeF3j8dS/z6txKY+aryI15P837A8Pi3sQ+1DvouDe5Zn+JxhjMH7mafZ/GbBY29izxtwPb0eF89Tz4vXc/cGruJ5GJ4Hql+9yubL80ls48v5q8dZpnt8Zp8LMFv9Pd09ueJ7zEmkk7M8DX+9unXM1973cqJ7JMuyZWDNfM2XK/qqNt0jkee950j7et7reean5r+FS366vzz8aHcprwzXfPWyFO3FVo7XnKPIV/Usylfmd5Zn1ayzvtYezLH6qedo7T3o7S3vLJCf7iXms7WbM82aFd7NxDUM7p/WXFt3YpQnzkPviR6t0Z2oe48zjvj0aqXXei44a3pCPla9WolNbXqncg9v0dbDwfv9uGWOezzY6+c31RNw+iiR
+   eJzllm1PwzAMhDsY3ZpB9///LUGKpYfT5a0VCIkPlrY19fnOZ2fPZVmefzwuOV5KvP4i7ppjL7Ghhp+ogxxTjluJXULrOFvPWnCuOd5zvBUcfnd17OX3bRCb/MjxLlpv8jywXD097EvJw3p3g3uTMzwXGGvl/Zamrf4lwWNuYqcDuI6vq8Vp6rT4OvfRwVU8h+E0UP6qVau/nE9iR73sPzHUW+rpGZ2Z5w5Ml1/5Ku8ZX/G9zeQmFz67ohec+9H+xvvOJ7pHqL16OTww0t/Q5QFs5cl55szXZmy0v7qfnPbhZZ1V5/8eLuvT/eV8rPtN9U0DuKGr8xJzp+U7z5aPR+aopqtqVvOX2zkjflbO2utHycHdqHrqHI3eg25vuVlgfbqX6M/ebm5xVq/wbiZuYHD/9PrauxPdZ+2l3hMzXGt3ou499rhWzyxXaq1zwV5TE9YTMcuV2OSmdyr31BFuMzW4/49H+nhGg7N6/qf4BC2KKIg=
   </data>
  </layer>
  <objectgroup name="Object Layer 1">
   <object id="1" name="Diamond" x="285.187" y="243.994" width="52" height="38" rotation="-45.079"/>
-  <object id="2" name="Sign" type="blah" x="82.5" y="171.5" width="83" height="19">
+  <object id="2" name="Sign" type="blah" x="82.5" y="173.5" width="83" height="19">
    <text wrap="1">Hello World</text>
   </object>
   <object id="6" x="170.25" y="231.5">

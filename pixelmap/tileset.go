@@ -22,14 +22,18 @@ type TileSets struct {
 	pics    map[uint32]pixel.Picture
 }
 
-func (ts *TileSets) FillTileAndMove(id uint32, vec pixel.Vec, t pixel.Triangles) {
+func (ts *TileSets) FillTileAndMod(id uint32, vec pixel.Vec, rbga pixel.RGBA, t pixel.Triangles) {
 	_, exists := ts.entries[id]
 	if !exists {
 		return
 	}
-	data := ts.entries[id].data.Copy().(*pixel.TrianglesData)
+	data, ok := ts.entries[id].data.Copy().(*pixel.TrianglesData)
+	if !ok {
+		return
+	}
 	for i := range *data {
 		(*data)[i].Position = (*data)[i].Position.Add(vec)
+		(*data)[i].Color = rbga
 	}
 	t.Update(data)
 }

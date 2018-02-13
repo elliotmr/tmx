@@ -27,7 +27,7 @@ func run() {
 		panic(err)
 	}
 
-	ld, err := pixelmap.NewLayerDrawer(mapData, 1, ts)
+	ld, err := pixelmap.NewTileDrawer(mapData, 1, ts)
 	if err != nil {
 		panic(err)
 	}
@@ -53,11 +53,12 @@ func run() {
 	for !win.Closed() {
 		if win.MouseScroll().Y != 0 {
 			factor := math.Pow(1.2, win.MouseScroll().Y)
-			zoomDeltaStart := cameraOrigin.Sub(win.Bounds().Center().Sub(win.MousePosition().Scaled(1 / scale)))
+			zoomDeltaStart := viewMatrix.Unproject(win.MousePosition())
 			scale *= factor
 			cameraOrigin = zoomDeltaStart.Add(win.Bounds().Center().Sub(win.MousePosition().Scaled(1 / scale)))
 		}
 		if win.JustPressed(pixelgl.MouseButton1) {
+			fmt.Println("Clicked At World Coordinate: ", viewMatrix.Unproject(win.MousePosition()))
 			dragOrigin = win.MousePosition().Scaled(1 / scale)
 		} else if win.Pressed(pixelgl.MouseButton1) {
 			newOrigin := win.MousePosition().Scaled(1 / scale)
@@ -65,7 +66,7 @@ func run() {
 			dragOrigin = newOrigin
 		}
 		viewMatrix = pixel.IM.Moved(win.Bounds().Center().Sub(cameraOrigin)).Scaled(pixel.ZV, scale)
-		win.Clear(colornames.Whitesmoke)
+		win.Clear(colornames.Gray)
 		win.SetMatrix(viewMatrix)
 		ld.Draw(win)
 		win.Update()
