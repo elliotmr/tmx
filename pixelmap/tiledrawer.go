@@ -1,74 +1,37 @@
 package pixelmap
 
 import (
-	"github.com/elliotmr/tiled/tmx"
 	"github.com/faiface/pixel"
 	"github.com/pkg/errors"
 )
 
 type TileDrawer struct {
 	ts      *TileSets
-	layer   *tmx.Layer
-	mapData *tmx.Map
+	li      *LayerInfo
 	drawers map[uint32]*pixel.Drawer
 }
 
-func NewTileDrawer(mapData *tmx.Map, layerIndex int, ts *TileSets) (*TileDrawer, error) {
-	if layerIndex >= len(mapData.Layers) {
-		return nil, errors.Errorf("layer index out of range (%d >= %d)", layerIndex, len(mapData.Layers))
-	}
-	layer := mapData.Layers[layerIndex]
+func NewTileDrawer(li *LayerInfo, ts *TileSets) *TileDrawer {
 	ld := &TileDrawer{
 		ts:      ts,
-		layer:   layer,
-		mapData: mapData,
+		li:      li,
 		drawers: make(map[uint32]*pixel.Drawer),
 	}
 
-	for _, l := range mapData.TileSets {
-		ld.drawers[l.FirstGID] = &pixel.Drawer{
+	for gid, pic := range ts.pics {
+		ld.drawers[gid] = &pixel.Drawer{
 			Triangles: &pixel.TrianglesData{},
-			Picture:   ts.pics[l.FirstGID],
+			Picture:   pic,
 		}
 	}
-
-	return ld, nil
+	return ld
 }
 
 func (ld *TileDrawer) Draw(t pixel.Target) error {
-	iter, err := ld.layer.Data.Iter()
+	// TODO: draworder
+	iter, err := ld.li.layer.Data.Iter()
 	if err != nil {
 		return errors.Wrap(err, "unable to load layer iterator")
-	}
-
-	// TODO: color, draworder, extract to function
-	w := int(ld.mapData.Width)
-	if ld.layer.Width != nil {
-		w = int(*ld.layer.Width)
-	}
-	h := int(ld.mapData.Height)
-	if ld.layer.Height != nil {
-		h = int(*ld.layer.Height)
-	}
-	offX := float64(ld.mapData.TileWidth) * 0.5
-	if ld.layer.OffsetX != nil {
-		offX += *ld.layer.OffsetX
-	}
-	offY := float64(ld.mapData.TileHeight) * -0.5
-	if ld.layer.OffsetY != nil {
-		offY -= *ld.layer.OffsetY
-	}
-
-	opacity := 1.0
-	if ld.layer.Opacity != nil {
-		opacity = *ld.layer.Opacity
-	}
-	rgba := pixel.Alpha(opacity)
-
-	if ld.layer.Visible != nil {
-		if *ld.layer.Visible == 0 {
-			rgba.A = 0.0
-		}
 	}
 
 	for gid, drawer := range ld.drawers {
@@ -82,10 +45,9 @@ func (ld *TileDrawer) Draw(t pixel.Target) error {
 				drawer.Triangles.SetLen(i * 6)
 			}
 			cellIndex := int(iter.GetIndex())
-			vx := float64(cellIndex%w) * float64(ld.mapData.TileWidth) + offX
-			vy := float64(int(ld.mapData.Height)-cellIndex/h) * float64(ld.mapData.TileHeight) + offY
+			vx, vy, _ := ld.li.CellCoordinates(cellIndex)
 			triangleSlice := drawer.Triangles.Slice((i-1)*6, i*6)
-			ld.ts.FillTileAndMod(iter.Get().GID, pixel.V(vx, vy), rgba, triangleSlice)
+			ld.ts.FillTileAndMod(iter.Get().GID, pixel.V(vx, vy), ld.li.color, triangleSlice)
 			i++
 		}
 		drawer.Triangles.SetLen(i * 6)

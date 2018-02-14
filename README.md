@@ -12,11 +12,12 @@ Go library for tiled
 - [x] \(Multiple) Tileset Support
   - [ ] Tileset Offset Support
 - [x] Tile Layer Rendering
+  - [x] Visbility Support
   - [x] Opacity Support
   - [x] Offset Support
   - [ ] Draw-order Support
 - [ ] Object Layer Rendering
-  - [ ] Color Support
+  - [x] Color Support
   - [ ] Shape Rendering
   - [ ] Text Rendering
 - [ ] Image Layer Rendering

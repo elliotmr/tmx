@@ -27,11 +27,12 @@ func run() {
 		panic(err)
 	}
 
-	ld, err := pixelmap.NewTileDrawer(mapData, 1, ts)
+	li, err := pixelmap.NewLayerInfo(mapData, 1)
 	if err != nil {
 		panic(err)
 	}
 
+	ld := pixelmap.NewTileDrawer(li, ts)
 	cfg := pixelgl.WindowConfig{
 		Title:  "Tiled Map Example",
 		Bounds: pixel.R(0, 0, 1024, 768),
