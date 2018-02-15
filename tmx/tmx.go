@@ -187,8 +187,10 @@ type Property struct {
 	Value string  `xml:"value,attr"`          // The value of the property.
 }
 
-// TODO: Add template groups
-
+type Template struct {
+	TileSet *TileSet `xml:"tileset,omitempty"`
+	Object  *Object  `xml:"object,omitempty"`
+}
 
 // Load parses a tmx file into a new tmx.Map object, it will also parse any
 // tsx tileset files that are referenced.
@@ -209,6 +211,6 @@ func Load(r io.Reader) (*Map, error) {
 				return nil, errors.Wrap(err, "unable to decode tileset source file")
 			}
 		}
- 	}
+	}
 	return tmxMap, errors.Wrap(err, "unable to decode tmx map")
 }

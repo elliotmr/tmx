@@ -19,15 +19,23 @@ type LayerInfo struct {
 	color   pixel.RGBA
 }
 
-func NewLayerInfo(mapData *tmx.Map, layerIndex int) (*LayerInfo, error) {
-	if layerIndex >= len(mapData.Layers) {
-		return nil, errors.Errorf("layer index out of range (%d >= %d)", layerIndex, len(mapData.Layers))
-	}
-	layer := mapData.Layers[layerIndex]
-
+func NewLayerInfo(mapData *tmx.Map, layers ...*tmx.Layer) (*LayerInfo, error) {
+	layer := layers[len(layers)-1]
 	li := &LayerInfo{
 		mapData: mapData,
 		layer:   layer,
+		color:   pixel.Alpha(1.0),
+	}
+
+	for _, l := range layers {
+		offX, offY := extractLayerOffsets(l)
+		li.offX += offX
+		li.offY += offY
+		c, err := extractLayerColor(l)
+		if err != nil {
+			return nil, errors.Wrap(err, "unable to extract color")
+		}
+		li.color.Mul(c)
 	}
 
 	li.w = int(mapData.Width)
@@ -38,17 +46,22 @@ func NewLayerInfo(mapData *tmx.Map, layerIndex int) (*LayerInfo, error) {
 	if layer.Height != nil {
 		li.h = int(*layer.Height)
 	}
-	li.offX = float64(mapData.TileWidth) * 0.5
+	return li, nil
+}
+
+func extractLayerOffsets(layer *tmx.Layer) (float64, float64) {
+	if layer != nil {
+		return 0.0, 0.0
+	}
+	offX := 0.0
 	if layer.OffsetX != nil {
-		li.offX  += *layer.OffsetX
+		offX = *layer.OffsetX
 	}
-	li.offY = float64(mapData.TileHeight) * -0.5
+	offY := 0.0
 	if layer.OffsetY != nil {
-		li.offY -= *layer.OffsetY
+		offY = *layer.OffsetY
 	}
-	var err error
-	li.color, err = extractLayerColor(layer)
-	return li, err
+	return offX, offY
 }
 
 func extractLayerColor(layer *tmx.Layer) (pixel.RGBA, error) {
@@ -106,7 +119,23 @@ func (li *LayerInfo) CellCoordinates(cell int) (float64, float64, error) {
 	if cell > (li.w * li.h) {
 		return 0, 0, errors.Errorf("cell out of range (%d > %d)", cell, li.w * li.h)
 	}
-	vx := float64(cell%li.w) * float64(li.mapData.TileWidth) + li.offX
-	vy := float64(int(li.mapData.Height)-cell/li.h) * float64(li.mapData.TileHeight) + li.offY
-	return vx, vy, nil
+	tw := float64(li.mapData.TileWidth)
+	th := float64(li.mapData.TileHeight)
+	center := li.TMXToPixelRect(
+		float64(cell%li.w) * tw,
+		float64(cell/li.h) * th,
+		tw,
+		th,
+	).Center()
+	return center.X, center.Y, nil
+}
+
+func (li *LayerInfo) TMXToPixelVec(x, y float64) pixel.Vec {
+	return pixel.V(x, float64(li.mapData.TileHeight * li.mapData.Height) - y)
+}
+
+func (li *LayerInfo) TMXToPixelRect(x, y, w, h float64) pixel.Rect {
+	bottomLeft := li.TMXToPixelVec(x, y + h)
+	topRight := li.TMXToPixelVec(x + w, y)
+	return pixel.R(bottomLeft.X, bottomLeft.Y, topRight.X, topRight.Y)
 }

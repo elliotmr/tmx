@@ -27,7 +27,8 @@ func run() {
 		panic(err)
 	}
 
-	li, err := pixelmap.NewLayerInfo(mapData, 1)
+	layer := mapData.Layers[1]
+	li, err := pixelmap.NewLayerInfo(mapData, layer)
 	if err != nil {
 		panic(err)
 	}
@@ -36,7 +37,7 @@ func run() {
 	cfg := pixelgl.WindowConfig{
 		Title:  "Tiled Map Example",
 		Bounds: pixel.R(0, 0, 1024, 768),
-		VSync:  true,
+		//VSync:  true,
 	}
 	win, err := pixelgl.NewWindow(cfg)
 	if err != nil {
