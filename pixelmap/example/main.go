@@ -27,13 +27,21 @@ func run() {
 		panic(err)
 	}
 
-	layer := mapData.Layers[1]
-	li, err := pixelmap.NewLayerInfo(mapData, layer)
+	li, err := pixelmap.NewLayerInfo(mapData, mapData.Layers[0])
+	if err != nil {
+		panic(err)
+	}
+	tileDrawer := pixelmap.NewTileDrawer(li, ts)
+
+	li2, err := pixelmap.NewLayerInfo(mapData, mapData.Layers[1])
+	if err != nil {
+		panic(err)
+	}
+	imageDrawer, err := pixelmap.NewImageDrawer(li2)
 	if err != nil {
 		panic(err)
 	}
 
-	ld := pixelmap.NewTileDrawer(li, ts)
 	cfg := pixelgl.WindowConfig{
 		Title:  "Tiled Map Example",
 		Bounds: pixel.R(0, 0, 1024, 768),
@@ -46,7 +54,7 @@ func run() {
 
 	win.SetSmooth(false)
 
-	cameraOrigin := pixel.ZV
+	cameraOrigin := pixel.ZV.Add(win.Bounds().Center())
 	scale := 1.0
 	dragOrigin := pixel.V(0, 0)
 	second := time.Tick(time.Second)
@@ -70,7 +78,8 @@ func run() {
 		viewMatrix = pixel.IM.Moved(win.Bounds().Center().Sub(cameraOrigin)).Scaled(pixel.ZV, scale)
 		win.Clear(colornames.Gray)
 		win.SetMatrix(viewMatrix)
-		ld.Draw(win)
+		tileDrawer.Draw(win)
+		imageDrawer.Draw(win)
 		win.Update()
 		frames++
 		select {

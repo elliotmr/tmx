@@ -20,4 +20,4 @@ Go library for tiled
   - [x] Color Support
   - [ ] Shape Rendering
   - [ ] Text Rendering
-- [ ] Image Layer Rendering
+- [x] Image Layer Rendering

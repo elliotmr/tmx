@@ -35,7 +35,7 @@ func NewLayerInfo(mapData *tmx.Map, layers ...*tmx.Layer) (*LayerInfo, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to extract color")
 		}
-		li.color.Mul(c)
+		li.color = li.color.Mul(c)
 	}
 
 	li.w = int(mapData.Width)
@@ -50,7 +50,7 @@ func NewLayerInfo(mapData *tmx.Map, layers ...*tmx.Layer) (*LayerInfo, error) {
 }
 
 func extractLayerOffsets(layer *tmx.Layer) (float64, float64) {
-	if layer != nil {
+	if layer == nil {
 		return 0.0, 0.0
 	}
 	offX := 0.0
@@ -65,6 +65,9 @@ func extractLayerOffsets(layer *tmx.Layer) (float64, float64) {
 }
 
 func extractLayerColor(layer *tmx.Layer) (pixel.RGBA, error) {
+	if layer == nil {
+		return pixel.Alpha(1.0), errors.New("nil layer passed")
+	}
 	opacity := 1.0
 	if layer.Opacity != nil {
 		opacity = *layer.Opacity
