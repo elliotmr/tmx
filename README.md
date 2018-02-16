@@ -16,8 +16,13 @@ Go library for tiled
   - [x] Opacity Support
   - [x] Offset Support
   - [ ] Draw-order Support
-- [ ] Object Layer Rendering
+- [x] Object Layer Rendering
   - [x] Color Support
-  - [ ] Shape Rendering
+  - [ ] Tile Rendering
+  - [x] Ellipse Rendering
+  - [ ] Point Rendering
+  - [ ] Polygon Rendering
+  - [ ] Polyline Rendering
   - [ ] Text Rendering
 - [x] Image Layer Rendering
+- [ ] Layer Group Rendering

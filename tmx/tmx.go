@@ -2,8 +2,8 @@ package tmx
 
 import (
 	"encoding/xml"
-	"io"
 	"github.com/pkg/errors"
+	"io"
 	"os"
 )
 

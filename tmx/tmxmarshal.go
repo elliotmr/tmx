@@ -1,8 +1,8 @@
 package tmx
 
 import (
-	"io"
 	"errors"
+	"io"
 )
 
 const (
@@ -13,7 +13,7 @@ const (
 )
 
 const (
-	mapFieldVersion      = iota
+	mapFieldVersion = iota
 	mapFieldTiledVersion
 	mapFieldOrientation
 	mapFieldRenderOrder
@@ -77,7 +77,6 @@ func writeStringField(bw io.ByteWriter, fieldNum byte, s string, n *int) (err er
 	return
 }
 
-
 func (m *Map) MarshalGen(bw io.ByteWriter) (n int, err error) {
 	// Version
 	if m.Version != "" {
@@ -106,14 +105,8 @@ func (m *Map) MarshalGen(bw io.ByteWriter) (n int, err error) {
 		}
 	}
 
-
-
-
-
-
 	return
 }
-
 
 func readUVarint64(br io.ByteReader) (num uint64, n int, err error) {
 	var b byte

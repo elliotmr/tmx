@@ -27,19 +27,17 @@ func run() {
 		panic(err)
 	}
 
-	li, err := pixelmap.NewLayerInfo(mapData, mapData.Layers[0])
-	if err != nil {
-		panic(err)
-	}
-	tileDrawer := pixelmap.NewTileDrawer(li, ts)
-
-	li2, err := pixelmap.NewLayerInfo(mapData, mapData.Layers[1])
-	if err != nil {
-		panic(err)
-	}
-	imageDrawer, err := pixelmap.NewImageDrawer(li2)
-	if err != nil {
-		panic(err)
+	drawers := make([]pixelmap.Drawer, 0)
+	for _, layer := range mapData.Layers {
+		li, err := pixelmap.NewLayerInfo(mapData, layer)
+		if err != nil {
+			panic(err)
+		}
+		d, err := pixelmap.NewDrawer(li, ts)
+		if err != nil {
+			panic(err)
+		}
+		drawers = append(drawers, d)
 	}
 
 	cfg := pixelgl.WindowConfig{
@@ -53,7 +51,6 @@ func run() {
 	}
 
 	win.SetSmooth(false)
-
 	cameraOrigin := pixel.ZV.Add(win.Bounds().Center())
 	scale := 1.0
 	dragOrigin := pixel.V(0, 0)
@@ -78,8 +75,9 @@ func run() {
 		viewMatrix = pixel.IM.Moved(win.Bounds().Center().Sub(cameraOrigin)).Scaled(pixel.ZV, scale)
 		win.Clear(colornames.Gray)
 		win.SetMatrix(viewMatrix)
-		tileDrawer.Draw(win)
-		imageDrawer.Draw(win)
+		for _, d := range drawers {
+			d.Draw(win)
+		}
 		win.Update()
 		frames++
 		select {

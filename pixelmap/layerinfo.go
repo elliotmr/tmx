@@ -1,8 +1,8 @@
 package pixelmap
 
 import (
-	"strings"
 	"strconv"
+	"strings"
 
 	"github.com/elliotmr/tiled/tmx"
 	"github.com/faiface/pixel"
@@ -120,13 +120,13 @@ func extractLayerColor(layer *tmx.Layer) (pixel.RGBA, error) {
 
 func (li *LayerInfo) CellCoordinates(cell int) (float64, float64, error) {
 	if cell > (li.w * li.h) {
-		return 0, 0, errors.Errorf("cell out of range (%d > %d)", cell, li.w * li.h)
+		return 0, 0, errors.Errorf("cell out of range (%d > %d)", cell, li.w*li.h)
 	}
 	tw := float64(li.mapData.TileWidth)
 	th := float64(li.mapData.TileHeight)
 	center := li.TMXToPixelRect(
-		float64(cell%li.w) * tw,
-		float64(cell/li.h) * th,
+		float64(cell%li.w)*tw,
+		float64(cell/li.h)*th,
 		tw,
 		th,
 	).Center()
@@ -134,11 +134,11 @@ func (li *LayerInfo) CellCoordinates(cell int) (float64, float64, error) {
 }
 
 func (li *LayerInfo) TMXToPixelVec(x, y float64) pixel.Vec {
-	return pixel.V(x, float64(li.mapData.TileHeight * li.mapData.Height) - y)
+	return pixel.V(x, float64(li.mapData.TileHeight*li.mapData.Height)-y)
 }
 
 func (li *LayerInfo) TMXToPixelRect(x, y, w, h float64) pixel.Rect {
-	bottomLeft := li.TMXToPixelVec(x, y + h)
-	topRight := li.TMXToPixelVec(x + w, y)
+	bottomLeft := li.TMXToPixelVec(x, y+h)
+	topRight := li.TMXToPixelVec(x+w, y)
 	return pixel.R(bottomLeft.X, bottomLeft.Y, topRight.X, topRight.Y)
 }

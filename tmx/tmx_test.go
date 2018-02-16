@@ -29,7 +29,7 @@ func TestLoad(t *testing.T) {
 
 	for iter.Next() {
 		fmt.Printf("%02d ", iter.Get().GID)
-		if iter.GetIndex() % *layer.Width == *layer.Width-1 {
+		if iter.GetIndex()%*layer.Width == *layer.Width-1 {
 			fmt.Println("")
 		}
 	}

@@ -1,11 +1,11 @@
 package tmx
 
 import (
+	"bytes"
 	"compress/gzip"
 	"compress/zlib"
-	"encoding/binary"
-	"bytes"
 	"encoding/base64"
+	"encoding/binary"
 	"github.com/pkg/errors"
 	"io"
 	"strconv"

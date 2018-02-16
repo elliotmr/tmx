@@ -11,7 +11,7 @@ type TileDrawer struct {
 	drawers map[uint32]*pixel.Drawer
 }
 
-func NewTileDrawer(li *LayerInfo, ts *TileSets) *TileDrawer {
+func NewTileDrawer(li *LayerInfo, ts *TileSets) (*TileDrawer, error) {
 	ld := &TileDrawer{
 		ts:      ts,
 		li:      li,
@@ -24,10 +24,11 @@ func NewTileDrawer(li *LayerInfo, ts *TileSets) *TileDrawer {
 			Picture:   pic,
 		}
 	}
-	return ld
+
+	return ld, ld.Update()
 }
 
-func (ld *TileDrawer) Draw(t pixel.Target) error {
+func (ld *TileDrawer) Update() error {
 	// TODO: draworder
 	iter, err := ld.li.layer.Data.Iter()
 	if err != nil {
@@ -52,12 +53,11 @@ func (ld *TileDrawer) Draw(t pixel.Target) error {
 		}
 		drawer.Triangles.SetLen(i * 6)
 	}
+	return errors.Wrap(iter.Error(), "unable to iterate through layer")
+}
 
-	if iter.Error() != nil {
-		return errors.Wrap(iter.Error(), "unable to iterate through layer")
-	}
+func (ld *TileDrawer) Draw(t pixel.Target) {
 	for _, d := range ld.drawers {
 		d.Draw(t)
 	}
-	return nil
 }

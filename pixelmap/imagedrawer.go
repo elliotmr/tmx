@@ -1,16 +1,16 @@
 package pixelmap
 
 import (
-	"github.com/faiface/pixel"
 	"image"
 	"os"
+
+	"github.com/faiface/pixel"
 	"github.com/pkg/errors"
 )
 
 type ImageDrawer struct {
-	li      *LayerInfo
-	sprite  *pixel.Sprite
-	drawers map[uint32]*pixel.Drawer
+	li     *LayerInfo
+	sprite *pixel.Sprite
 }
 
 func NewImageDrawer(li *LayerInfo) (*ImageDrawer, error) {
@@ -18,26 +18,28 @@ func NewImageDrawer(li *LayerInfo) (*ImageDrawer, error) {
 		return nil, errors.New("image not set for image layer")
 	}
 	id := &ImageDrawer{
-		li:      li,
-		drawers: make(map[uint32]*pixel.Drawer),
+		li: li,
 	}
+	return id, id.Update()
+}
 
-	imageFile, err := os.Open(li.layer.Image.Source)
+func (id *ImageDrawer) Update() error {
+	imageFile, err := os.Open(id.li.layer.Image.Source)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to open image")
+		return errors.Wrap(err, "unable to open image")
 	}
 	tilesetImg, _, err := image.Decode(imageFile)
 	imageFile.Close()
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to decode image")
+		return errors.Wrap(err, "unable to decode image")
 	}
 
 	pic := pixel.PictureDataFromImage(tilesetImg)
 	id.sprite = pixel.NewSprite(pic, pic.Bounds())
-	return id, nil
+	return nil
 }
 
-func (id *ImageDrawer) Draw(t pixel.Target) error {
+func (id *ImageDrawer) Draw(t pixel.Target) {
 	vec := id.li.TMXToPixelRect(
 		id.li.offX,
 		id.li.offY,
@@ -45,5 +47,4 @@ func (id *ImageDrawer) Draw(t pixel.Target) error {
 		id.sprite.Frame().H(),
 	).Center()
 	id.sprite.DrawColorMask(t, pixel.IM.Moved(vec), id.li.color)
-	return nil
 }
