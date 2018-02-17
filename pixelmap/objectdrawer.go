@@ -9,6 +9,8 @@ import (
 	"golang.org/x/image/colornames"
 	"golang.org/x/image/font/basicfont"
 	"fmt"
+	"strings"
+	"strconv"
 )
 
 type ObjectDrawer struct {
@@ -37,12 +39,31 @@ func getPosition(object *tmx.Object, li *LayerInfo) pixel.Vec {
 	return v
 }
 
+func getLine(points string, li *LayerInfo) ([]pixel.Vec, error) {
+	ptVec := make([]pixel.Vec, 0)
+	ptFields := strings.Fields(points)
+	for _, ptField := range ptFields {
+		pt := strings.Split(ptField, ",")
+		x, err := strconv.ParseFloat(pt[0], 64)
+		if err != nil {
+			return nil, errors.Wrap(err, "invalid x-axis point")
+		}
+		y, err := strconv.ParseFloat(pt[1], 64)
+		if err != nil {
+			return nil, errors.Wrap(err, "invalid y-axis point")
+		}
+		ptVec = append(ptVec, pixel.V(x, -y))
+	}
+	return ptVec, nil
+}
+
 func (od *ObjectDrawer) createMatrix(object *tmx.Object) pixel.Matrix {
 	v := getPosition(object, od.li)
 	m := pixel.IM.Moved(v)
 	if object.Rotation != nil {
 		m = m.Rotated(v, *object.Rotation)
 	}
+	fmt.Println("Matrix: ", m)
 	return m
 }
 
@@ -55,8 +76,9 @@ func (od *ObjectDrawer) Update() error {
 			continue // skip invisible objects
 		}
 		imd := imdraw.New(nil)
-		imd.Color = pixel.Alpha(0.5).Mul(pixel.ToRGBA(colornames.Gray))
+		imd.Color = pixel.Alpha(0.5).Mul(pixel.ToRGBA(colornames.White))
 		imd.SetMatrix(od.createMatrix(obj))
+		// TODO: Something is up with rotation.
 		switch {
 		case obj.GID != nil:
 			// TODO
@@ -70,9 +92,24 @@ func (od *ObjectDrawer) Update() error {
 		case obj.Point != nil:
 			// TODO
 		case obj.Polygon != nil:
-			// TODO
+			l, err := getLine(obj.Polygon.Points, od.li)
+			if err != nil {
+				return errors.Wrap(err, "invalid polyline")
+			}
+			imd.Push(l...)
+			imd.Polygon(0)
+			od.im = append(od.im, imd)
+			fmt.Println("Polygon: ", l)
 		case obj.Polyline != nil:
-			// TODO
+			l, err := getLine(obj.Polyline.Points, od.li)
+			if err != nil {
+				return errors.Wrap(err, "invalid polyline")
+			}
+			imd.EndShape = imdraw.RoundEndShape
+			imd.Push(l...)
+			imd.Line(10)
+			od.im = append(od.im, imd)
+			fmt.Println("Polyline: ", l)
 		case obj.Text != nil:
 			// TODO: font, style handling
 			imd.Push(pixel.V(0, 0))
@@ -80,6 +117,8 @@ func (od *ObjectDrawer) Update() error {
 			txt := text.New(od.li.TMXToPixelRect(obj.X, obj.Y, 0, *obj.Height).Center(), at)
 			fmt.Fprint(txt, obj.Text.Text)
 			od.txt = append(od.txt, txt)
+		default: // Box
+
 		}
 	}
 	return nil
