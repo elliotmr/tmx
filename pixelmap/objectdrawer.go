@@ -4,14 +4,18 @@ import (
 	"github.com/elliotmr/tiled/tmx"
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
+	"github.com/faiface/pixel/text"
 	"github.com/pkg/errors"
 	"golang.org/x/image/colornames"
+	"golang.org/x/image/font/basicfont"
+	"fmt"
 )
 
 type ObjectDrawer struct {
-	ts *TileSets
-	li *LayerInfo
-	im []*imdraw.IMDraw
+	ts  *TileSets
+	li  *LayerInfo
+	im  []*imdraw.IMDraw
+	txt []*text.Text
 }
 
 func NewObjectDrawer(li *LayerInfo, ts *TileSets) (*ObjectDrawer, error) {
@@ -23,13 +27,18 @@ func NewObjectDrawer(li *LayerInfo, ts *TileSets) (*ObjectDrawer, error) {
 	return od, od.Update()
 }
 
-func (od *ObjectDrawer) createMatrix(object *tmx.Object) pixel.Matrix {
+func getPosition(object *tmx.Object, li *LayerInfo) pixel.Vec {
 	var v pixel.Vec
 	if object.Height != nil && object.Width != nil {
-		v = od.li.TMXToPixelRect(object.X, object.Y, *object.Width, *object.Height).Center()
+		v = li.TMXToPixelRect(object.X, object.Y, *object.Width, *object.Height).Center()
 	} else {
-		v = od.li.TMXToPixelVec(object.X, object.Y)
+		v = li.TMXToPixelVec(object.X, object.Y)
 	}
+	return v
+}
+
+func (od *ObjectDrawer) createMatrix(object *tmx.Object) pixel.Matrix {
+	v := getPosition(object, od.li)
 	m := pixel.IM.Moved(v)
 	if object.Rotation != nil {
 		m = m.Rotated(v, *object.Rotation)
@@ -40,6 +49,7 @@ func (od *ObjectDrawer) createMatrix(object *tmx.Object) pixel.Matrix {
 func (od *ObjectDrawer) Update() error {
 	// TODO: Template support
 	od.im = od.im[:0]
+	od.txt = od.txt[:0]
 	for _, obj := range od.li.layer.Objects {
 		if obj.Visible != nil && *obj.Visible == 0 {
 			continue // skip invisible objects
@@ -64,14 +74,23 @@ func (od *ObjectDrawer) Update() error {
 		case obj.Polyline != nil:
 			// TODO
 		case obj.Text != nil:
-			// TODO
+			// TODO: font, style handling
+			imd.Push(pixel.V(0, 0))
+			at := text.NewAtlas(basicfont.Face7x13, text.ASCII)
+			txt := text.New(od.li.TMXToPixelRect(obj.X, obj.Y, 0, *obj.Height).Center(), at)
+			fmt.Fprint(txt, obj.Text.Text)
+			od.txt = append(od.txt, txt)
 		}
 	}
 	return nil
 }
 
 func (od *ObjectDrawer) Draw(t pixel.Target) {
+	// TODO: Fix object/text draw order
 	for _, obj := range od.im {
 		obj.Draw(t)
+	}
+	for _, txt := range od.txt {
+		txt.Draw(t, pixel.IM)
 	}
 }
