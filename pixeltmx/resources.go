@@ -1,7 +1,6 @@
 package pixeltmx
 
 import (
-	"fmt"
 	"image"
 	"os"
 
@@ -17,14 +16,14 @@ type tileSetEntry struct {
 	firstGID uint32
 }
 
-// TileSets holds the
-type TileSets struct {
+// Resources holds the
+type Resources struct {
 	// TODO: idea - change to resources and add text atlas and template maps
 	entries map[uint32]tileSetEntry
 	pics    map[uint32]pixel.Picture
 }
 
-func (ts *TileSets) FillTileAndMod(id uint32, vec pixel.Vec, rbga pixel.RGBA, t pixel.Triangles) {
+func (ts *Resources) FillTileAndMod(id uint32, vec pixel.Vec, rbga pixel.RGBA, t pixel.Triangles) {
 	_, exists := ts.entries[id]
 	if !exists {
 		return
@@ -40,8 +39,8 @@ func (ts *TileSets) FillTileAndMod(id uint32, vec pixel.Vec, rbga pixel.RGBA, t 
 	t.Update(data)
 }
 
-func LoadTileSets(mapData *tmx.Map) (*TileSets, error) {
-	ts := &TileSets{
+func LoadResources(mapData *tmx.Map) (*Resources, error) {
+	ts := &Resources{
 		entries: make(map[uint32]tileSetEntry),
 		pics:    make(map[uint32]pixel.Picture),
 	}
@@ -83,7 +82,6 @@ func LoadTileSets(mapData *tmx.Map) (*TileSets, error) {
 		}
 	}
 
-	fmt.Println(ts)
 	return ts, nil
 }
 

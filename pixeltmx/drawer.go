@@ -1,25 +1,74 @@
 package pixeltmx
 
 import (
+	"github.com/elliotmr/tmx"
 	"github.com/faiface/pixel"
 	"github.com/pkg/errors"
 )
 
+const (
+	TileLayerDrawer = iota
+	ObjectGroupDrawer
+	ImageLayerDrawer
+	GroupDrawer
+)
+
+// Drawer is the base interface for the pixeltmx library, there are 4 concrete implementations
+// for the 4 types of tmx layers (tile layer, object group, image layer, group layer). The
+// underlying type can be extracted using `Type()` method. Each Layer will be updated once
+// on creation and remain cached for subsequent draws. If the underlying data or resources have
+// been changed, the `Update()` method must be called before the changes will be visible when
+// drawing.
 type Drawer interface {
-	Draw(target pixel.Target)
+	Type() int
+	Info() *LayerInfo
 	Update() error
+	Draw(target pixel.Target)
 }
 
-func NewDrawer(li *LayerInfo, ts *TileSets) (Drawer, error) {
-	switch li.layer.XMLName.Local {
-	case "layer":
-		return NewTileDrawer(li, ts)
-	case "objectgroup":
-		return NewObjectDrawer(li, ts)
-	case "imagelayer":
-		return NewImageDrawer(li)
-	case "group":
-		// return NewGroupDrawer(li, ts)
+// NewDrawer create a new Drawer which will draw the layer and recursively all child layers.
+func NewDrawer(resources *Resources, parent Drawer, layer *tmx.Layer) (Drawer, error) {
+	info, err := newLayerInfo(parent.Info(), layer)
+	if err != nil {
+		panic(err)
 	}
-	return nil, errors.Errorf("invalid layer type: %s", li.layer.XMLName.Local)
+	switch info.layer.XMLName.Local {
+	case "layer":
+		return newTileLayerDrawer(resources, info)
+	case "objectgroup":
+		return newObjectGroupDrawer(resources, info)
+	case "imagelayer":
+		return newImageLayerDriver(resources, info)
+	case "group":
+		return newGroupDrawer(resources, info)
+	}
+	return nil, errors.Errorf("invalid layer type: %s", info.layer.XMLName.Local)
+}
+
+
+// NewRootDrawer will create a special Drawer that will recursively draw the entire
+// tmx map.
+func NewRootDrawer(resources *Resources, mapData *tmx.Map) (*groupDrawer, error) {
+	info := &LayerInfo{
+		mapData: mapData,
+		layer: nil,
+		w: int(mapData.Width),
+		h: int(mapData.Height),
+		offX: 0.0,
+		offY: 0.0,
+		color: pixel.Alpha(1.0),
+	}
+	gd := &groupDrawer{
+		info:     info,
+		children: make([]Drawer, 0),
+	}
+
+	for _, l := range mapData.Layers {
+		d, err := NewDrawer(resources, gd, l)
+		if err != nil {
+			return nil, err
+		}
+		gd.children = append(gd.children, d)
+	}
+	return gd, nil
 }

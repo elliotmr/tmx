@@ -23,30 +23,22 @@ type LayerInfo struct {
 	color   pixel.RGBA
 }
 
-func NewLayerInfo(mapData *tmx.Map, layers ...*tmx.Layer) (*LayerInfo, error) {
-	layer := layers[len(layers)-1]
-	li := &LayerInfo{
-		mapData: mapData,
-		layer:   layer,
-		color:   pixel.Alpha(1.0),
-	}
+func newLayerInfo(parent *LayerInfo, layer *tmx.Layer) (*LayerInfo, error) {
+	li := &LayerInfo{}
+	*li = *parent
+	li.layer = layer
 
-	for _, l := range layers {
-		offX, offY := extractLayerOffsets(l)
-		li.offX += offX
-		li.offY += offY
-		c, err := extractLayerColor(l)
-		if err != nil {
-			return nil, errors.Wrap(err, "unable to extract color")
-		}
-		li.color = li.color.Mul(c)
+	offX, offY := extractLayerOffsets(layer)
+	li.offX += offX
+	li.offY += offY
+	c, err := extractLayerColor(layer)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to extract color")
 	}
-
-	li.w = int(mapData.Width)
+	li.color = li.color.Mul(c)
 	if layer.Width != nil {
 		li.w = int(*layer.Width)
 	}
-	li.h = int(mapData.Height)
 	if layer.Height != nil {
 		li.h = int(*layer.Height)
 	}

@@ -15,17 +15,17 @@ import (
 	"golang.org/x/image/font/basicfont"
 )
 
-type ObjectDrawer struct {
-	ts              *TileSets
-	li              *LayerInfo
+type objectGroupDrawer struct {
+	resources       *Resources
+	info            *LayerInfo
 	currentFirstGID uint64
 	batches         []*pixel.Batch
 }
 
-func NewObjectDrawer(li *LayerInfo, ts *TileSets) (*ObjectDrawer, error) {
-	od := &ObjectDrawer{
-		ts:              ts,
-		li:              li,
+func newObjectGroupDrawer(resources *Resources, info *LayerInfo) (*objectGroupDrawer, error) {
+	od := &objectGroupDrawer{
+		resources:       resources,
+		info:            info,
 		currentFirstGID: math.MaxUint64,
 		batches:         make([]*pixel.Batch, 0),
 	}
@@ -60,31 +60,39 @@ func getLine(points string, li *LayerInfo) ([]pixel.Vec, error) {
 	return ptVec, nil
 }
 
-func (od *ObjectDrawer) createMatrix(object *tmx.Object) pixel.Matrix {
-	v := getPosition(object, od.li)
+func (ogd *objectGroupDrawer) createMatrix(object *tmx.Object) pixel.Matrix {
+	v := getPosition(object, ogd.info)
 	m := pixel.IM.Moved(v)
 	if object.Rotation != nil {
 		m = m.Rotated(v, *object.Rotation*-math.Pi/180.0)
 	}
-	fmt.Println("Matrix: ", m)
 	return m
 }
 
-func (od *ObjectDrawer) createIMD(obj *tmx.Object) *imdraw.IMDraw {
+func (ogd *objectGroupDrawer) createIMD(obj *tmx.Object) *imdraw.IMDraw {
 	imd := imdraw.New(nil)
 	imd.Color = pixel.Alpha(0.5).Mul(pixel.ToRGBA(colornames.White))
-	imd.SetMatrix(od.createMatrix(obj))
-	if od.currentFirstGID != 0 {
-		od.batches = append(od.batches, pixel.NewBatch(&pixel.TrianglesData{}, nil))
-		od.currentFirstGID = 0
+	imd.SetMatrix(ogd.createMatrix(obj))
+	if ogd.currentFirstGID != 0 {
+		ogd.batches = append(ogd.batches, pixel.NewBatch(&pixel.TrianglesData{}, nil))
+		ogd.currentFirstGID = 0
 	}
 	return imd
 }
 
-func (od *ObjectDrawer) Update() error {
+
+func (ogd *objectGroupDrawer) Type() int {
+	return ObjectGroupDrawer
+}
+
+func (ogd *objectGroupDrawer) Info() *LayerInfo {
+	return ogd.info
+}
+
+func (ogd *objectGroupDrawer) Update() error {
 	// TODO: Template support
-	od.batches = od.batches[:0] // TODO: Persist batches?
-	for _, obj := range od.li.layer.Objects {
+	ogd.batches = ogd.batches[:0] // TODO: Persist batches?
+	for _, obj := range ogd.info.layer.Objects {
 		if obj.Visible != nil && *obj.Visible == 0 {
 			continue // skip invisible objects
 		}
@@ -92,62 +100,62 @@ func (od *ObjectDrawer) Update() error {
 		case obj.GID != nil:
 
 		case obj.Ellipse != nil:
-			imd := od.createIMD(obj)
+			imd := ogd.createIMD(obj)
 			if obj.Width == nil || obj.Height == nil {
 				return errors.New("ellipse without width or height set")
 			}
 			imd.Push(pixel.V(0, 0))
 			imd.Ellipse(pixel.V(*obj.Width/2, *obj.Height/2), 0)
-			imd.Draw(od.batches[len(od.batches)-1])
+			imd.Draw(ogd.batches[len(ogd.batches)-1])
 		case obj.Point != nil:
 			// TODO
 		case obj.Polygon != nil:
-			imd := od.createIMD(obj)
-			l, err := getLine(obj.Polygon.Points, od.li)
+			imd := ogd.createIMD(obj)
+			l, err := getLine(obj.Polygon.Points, ogd.info)
 			if err != nil {
 				return errors.Wrap(err, "invalid polyline")
 			}
 			imd.Push(l...)
 			imd.Polygon(0)
-			if od.currentFirstGID != 0 {
-				od.batches = append(od.batches, pixel.NewBatch(&pixel.TrianglesData{}, nil))
+			if ogd.currentFirstGID != 0 {
+				ogd.batches = append(ogd.batches, pixel.NewBatch(&pixel.TrianglesData{}, nil))
 			}
-			imd.Draw(od.batches[len(od.batches)-1])
+			imd.Draw(ogd.batches[len(ogd.batches)-1])
 		case obj.Polyline != nil:
-			imd := od.createIMD(obj)
-			l, err := getLine(obj.Polyline.Points, od.li)
+			imd := ogd.createIMD(obj)
+			l, err := getLine(obj.Polyline.Points, ogd.info)
 			if err != nil {
 				return errors.Wrap(err, "invalid polyline")
 			}
 			imd.EndShape = imdraw.RoundEndShape
 			imd.Push(l...)
 			imd.Line(10)
-			imd.Draw(od.batches[len(od.batches)-1])
+			imd.Draw(ogd.batches[len(ogd.batches)-1])
 		case obj.Text != nil:
 			// TODO: font, style handling
 			at := text.NewAtlas(basicfont.Face7x13, text.ASCII)
-			txt := text.New(od.li.TMXToPixelRect(obj.X, obj.Y, 0, *obj.Height).Center(), at)
+			txt := text.New(ogd.info.TMXToPixelRect(obj.X, obj.Y, 0, *obj.Height).Center(), at)
 			fmt.Fprint(txt, obj.Text.Text)
-			if od.currentFirstGID != math.MaxUint32+1 {
-				od.batches = append(od.batches, pixel.NewBatch(&pixel.TrianglesData{}, at.Picture()))
-				od.currentFirstGID = math.MaxUint32 + 1
+			if ogd.currentFirstGID != math.MaxUint32+1 {
+				ogd.batches = append(ogd.batches, pixel.NewBatch(&pixel.TrianglesData{}, at.Picture()))
+				ogd.currentFirstGID = math.MaxUint32 + 1
 			}
-			txt.Draw(od.batches[len(od.batches)-1], pixel.IM)
+			txt.Draw(ogd.batches[len(ogd.batches)-1], pixel.IM)
 		default: // Box
-			imd := od.createIMD(obj)
+			imd := ogd.createIMD(obj)
 			if obj.Width == nil || obj.Height == nil {
 				return errors.New("ellipse without width or height set")
 			}
 			imd.Push(pixel.V(-(*obj.Width/2), -(*obj.Height/2)), pixel.V(*obj.Width/2, *obj.Height/2))
 			imd.Rectangle(0)
-			imd.Draw(od.batches[len(od.batches)-1])
+			imd.Draw(ogd.batches[len(ogd.batches)-1])
 		}
 	}
 	return nil
 }
 
-func (od *ObjectDrawer) Draw(t pixel.Target) {
-	for _, batch := range od.batches {
+func (ogd *objectGroupDrawer) Draw(t pixel.Target) {
+	for _, batch := range ogd.batches {
 		batch.Draw(t)
 	}
 }

@@ -22,22 +22,14 @@ func run() {
 	if err != nil {
 		panic(err)
 	}
-	ts, err := pixeltmx.LoadTileSets(mapData)
+	resources, err := pixeltmx.LoadResources(mapData)
 	if err != nil {
 		panic(err)
 	}
 
-	drawers := make([]pixeltmx.Drawer, 0)
-	for _, layer := range mapData.Layers {
-		li, err := pixeltmx.NewLayerInfo(mapData, layer)
-		if err != nil {
-			panic(err)
-		}
-		d, err := pixeltmx.NewDrawer(li, ts)
-		if err != nil {
-			panic(err)
-		}
-		drawers = append(drawers, d)
+	drawer, err := pixeltmx.NewRootDrawer(resources, mapData)
+	if err != nil {
+		panic(err)
 	}
 
 	cfg := pixelgl.WindowConfig{
@@ -74,9 +66,7 @@ func run() {
 		viewMatrix = pixel.IM.Moved(win.Bounds().Center().Sub(cameraOrigin)).Scaled(pixel.ZV, scale)
 		win.Clear(colornames.Gray)
 		win.SetMatrix(viewMatrix)
-		for _, d := range drawers {
-			d.Draw(win)
-		}
+		drawer.Draw(win)
 		win.Update()
 		frames++
 		select {
