@@ -1,30 +1,33 @@
-package pixelmap
+package pixeltmx
 
 import (
-	"github.com/elliotmr/tiled/tmx"
+	"fmt"
+	"strings"
+	"strconv"
+	"math"
+
+	"github.com/elliotmr/tmx"
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
 	"github.com/faiface/pixel/text"
 	"github.com/pkg/errors"
 	"golang.org/x/image/colornames"
 	"golang.org/x/image/font/basicfont"
-	"fmt"
-	"strings"
-	"strconv"
 )
 
 type ObjectDrawer struct {
-	ts  *TileSets
-	li  *LayerInfo
-	im  []*imdraw.IMDraw
-	txt []*text.Text
+	ts              *TileSets
+	li              *LayerInfo
+	currentFirstGID uint64
+	batches         []*pixel.Batch
 }
 
 func NewObjectDrawer(li *LayerInfo, ts *TileSets) (*ObjectDrawer, error) {
 	od := &ObjectDrawer{
-		ts: ts,
-		li: li,
-		im: make([]*imdraw.IMDraw, 0),
+		ts:          ts,
+		li:          li,
+		currentFirstGID: math.MaxUint64,
+		batches: make([]*pixel.Batch, 0),
 	}
 	return od, od.Update()
 }
@@ -61,46 +64,57 @@ func (od *ObjectDrawer) createMatrix(object *tmx.Object) pixel.Matrix {
 	v := getPosition(object, od.li)
 	m := pixel.IM.Moved(v)
 	if object.Rotation != nil {
-		m = m.Rotated(v, *object.Rotation)
+		m = m.Rotated(v, *object.Rotation * -math.Pi/180.0)
 	}
 	fmt.Println("Matrix: ", m)
 	return m
 }
 
+func (od *ObjectDrawer) createIMD(obj *tmx.Object) *imdraw.IMDraw {
+	imd := imdraw.New(nil)
+	imd.Color = pixel.Alpha(0.5).Mul(pixel.ToRGBA(colornames.White))
+	imd.SetMatrix(od.createMatrix(obj))
+	if od.currentFirstGID != 0 {
+		od.batches = append(od.batches, pixel.NewBatch(&pixel.TrianglesData{}, nil))
+		od.currentFirstGID = 0
+	}
+	return imd
+}
+
 func (od *ObjectDrawer) Update() error {
 	// TODO: Template support
-	od.im = od.im[:0]
-	od.txt = od.txt[:0]
+	od.batches = od.batches[:0] // TODO: Persist batches?
 	for _, obj := range od.li.layer.Objects {
 		if obj.Visible != nil && *obj.Visible == 0 {
 			continue // skip invisible objects
 		}
-		imd := imdraw.New(nil)
-		imd.Color = pixel.Alpha(0.5).Mul(pixel.ToRGBA(colornames.White))
-		imd.SetMatrix(od.createMatrix(obj))
-		// TODO: Something is up with rotation.
 		switch {
 		case obj.GID != nil:
-			// TODO
+
 		case obj.Ellipse != nil:
+			imd := od.createIMD(obj)
 			if obj.Width == nil || obj.Height == nil {
 				return errors.New("ellipse without width or height set")
 			}
 			imd.Push(pixel.V(0, 0))
 			imd.Ellipse(pixel.V(*obj.Width/2, *obj.Height/2), 0)
-			od.im = append(od.im, imd)
+			imd.Draw(od.batches[len(od.batches) - 1])
 		case obj.Point != nil:
 			// TODO
 		case obj.Polygon != nil:
+			imd := od.createIMD(obj)
 			l, err := getLine(obj.Polygon.Points, od.li)
 			if err != nil {
 				return errors.Wrap(err, "invalid polyline")
 			}
 			imd.Push(l...)
 			imd.Polygon(0)
-			od.im = append(od.im, imd)
-			fmt.Println("Polygon: ", l)
+			if od.currentFirstGID != 0 {
+				od.batches = append(od.batches, pixel.NewBatch(&pixel.TrianglesData{}, nil))
+			}
+			imd.Draw(od.batches[len(od.batches) - 1])
 		case obj.Polyline != nil:
+			imd := od.createIMD(obj)
 			l, err := getLine(obj.Polyline.Points, od.li)
 			if err != nil {
 				return errors.Wrap(err, "invalid polyline")
@@ -108,28 +122,32 @@ func (od *ObjectDrawer) Update() error {
 			imd.EndShape = imdraw.RoundEndShape
 			imd.Push(l...)
 			imd.Line(10)
-			od.im = append(od.im, imd)
-			fmt.Println("Polyline: ", l)
+			imd.Draw(od.batches[len(od.batches) - 1])
 		case obj.Text != nil:
 			// TODO: font, style handling
-			imd.Push(pixel.V(0, 0))
 			at := text.NewAtlas(basicfont.Face7x13, text.ASCII)
 			txt := text.New(od.li.TMXToPixelRect(obj.X, obj.Y, 0, *obj.Height).Center(), at)
 			fmt.Fprint(txt, obj.Text.Text)
-			od.txt = append(od.txt, txt)
+			if od.currentFirstGID != math.MaxUint32 + 1 {
+				od.batches = append(od.batches, pixel.NewBatch(&pixel.TrianglesData{}, at.Picture()))
+				od.currentFirstGID = math.MaxUint32 + 1
+			}
+			txt.Draw(od.batches[len(od.batches) - 1], pixel.IM)
 		default: // Box
-
+			imd := od.createIMD(obj)
+			if obj.Width == nil || obj.Height == nil {
+				return errors.New("ellipse without width or height set")
+			}
+			imd.Push(pixel.V(-(*obj.Width/2), -(*obj.Height/2)), pixel.V(*obj.Width/2, *obj.Height/2))
+			imd.Rectangle(0)
+			imd.Draw(od.batches[len(od.batches) - 1])
 		}
 	}
 	return nil
 }
 
 func (od *ObjectDrawer) Draw(t pixel.Target) {
-	// TODO: Fix object/text draw order
-	for _, obj := range od.im {
-		obj.Draw(t)
-	}
-	for _, txt := range od.txt {
-		txt.Draw(t, pixel.IM)
+	for _, batch := range od.batches {
+		batch.Draw(t)
 	}
 }

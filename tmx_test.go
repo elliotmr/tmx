@@ -11,7 +11,7 @@ import (
 )
 
 func TestLoad(t *testing.T) {
-	fp, err := os.Open("arena.tmx")
+	fp, err := os.Open("resources/arena.tmx")
 	require.NoError(t, err)
 	m, err := Load(fp)
 	defer fp.Close()
@@ -37,7 +37,7 @@ func TestLoad(t *testing.T) {
 }
 
 func TestLoadTSX(t *testing.T) {
-	fp, err := os.Open("cave.tmx")
+	fp, err := os.Open("resources/cave.tmx")
 	assert.NoError(t, err)
 	defer fp.Close()
 	m, err := Load(fp)

@@ -2,9 +2,10 @@ package tmx
 
 import (
 	"encoding/xml"
-	"github.com/pkg/errors"
-	"io"
 	"os"
+	"path/filepath"
+
+	"github.com/pkg/errors"
 )
 
 type Map struct {
@@ -194,13 +195,13 @@ type Template struct {
 
 // Load parses a tmx file into a new tmx.Map object, it will also parse any
 // tsx tileset files that are referenced.
-func Load(r io.Reader) (*Map, error) {
-	decoder := xml.NewDecoder(r)
+func Load(file *os.File) (*Map, error) {
+	decoder := xml.NewDecoder(file)
 	tmxMap := &Map{}
 	err := decoder.Decode(tmxMap)
 	for _, ts := range tmxMap.TileSets {
 		if ts.Source != "" {
-			tsxFile, err := os.Open(ts.Source)
+			tsxFile, err := os.Open(filepath.Join(filepath.Dir(file.Name()), ts.Source))
 			if err != nil {
 				return nil, errors.Wrap(err, "unable to open tileset source file")
 			}

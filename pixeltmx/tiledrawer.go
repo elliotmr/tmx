@@ -1,4 +1,4 @@
-package pixelmap
+package pixeltmx
 
 import (
 	"github.com/faiface/pixel"

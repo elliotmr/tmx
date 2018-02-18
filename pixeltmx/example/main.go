@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/elliotmr/tiled/pixelmap"
-	"github.com/elliotmr/tiled/tmx"
+	"github.com/elliotmr/tmx/pixeltmx"
+	"github.com/elliotmr/tmx"
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
 	"golang.org/x/image/colornames"
@@ -22,18 +22,18 @@ func run() {
 	if err != nil {
 		panic(err)
 	}
-	ts, err := pixelmap.LoadTileSets(mapData)
+	ts, err := pixeltmx.LoadTileSets(mapData)
 	if err != nil {
 		panic(err)
 	}
 
-	drawers := make([]pixelmap.Drawer, 0)
+	drawers := make([]pixeltmx.Drawer, 0)
 	for _, layer := range mapData.Layers {
-		li, err := pixelmap.NewLayerInfo(mapData, layer)
+		li, err := pixeltmx.NewLayerInfo(mapData, layer)
 		if err != nil {
 			panic(err)
 		}
-		d, err := pixelmap.NewDrawer(li, ts)
+		d, err := pixeltmx.NewDrawer(li, ts)
 		if err != nil {
 			panic(err)
 		}
@@ -41,7 +41,7 @@ func run() {
 	}
 
 	cfg := pixelgl.WindowConfig{
-		Title:  "Tiled Map Example",
+		Title:  "TMX Map Example",
 		Bounds: pixel.R(0, 0, 1024, 768),
 		//VSync:  true,
 	}
@@ -65,7 +65,6 @@ func run() {
 			cameraOrigin = zoomDeltaStart.Add(win.Bounds().Center().Sub(win.MousePosition().Scaled(1 / scale)))
 		}
 		if win.JustPressed(pixelgl.MouseButton1) {
-			fmt.Println("Clicked At World Coordinate: ", viewMatrix.Unproject(win.MousePosition()))
 			dragOrigin = win.MousePosition().Scaled(1 / scale)
 		} else if win.Pressed(pixelgl.MouseButton1) {
 			newOrigin := win.MousePosition().Scaled(1 / scale)

@@ -1,10 +1,10 @@
-package pixelmap
+package pixeltmx
 
 import (
 	"strconv"
 	"strings"
 
-	"github.com/elliotmr/tiled/tmx"
+	"github.com/elliotmr/tmx"
 	"github.com/faiface/pixel"
 	"github.com/pkg/errors"
 )

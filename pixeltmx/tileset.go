@@ -1,4 +1,4 @@
-package pixelmap
+package pixeltmx
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 
 	_ "image/png"
 
-	"github.com/elliotmr/tiled/tmx"
+	"github.com/elliotmr/tmx"
 	"github.com/faiface/pixel"
 	"github.com/pkg/errors"
 )
@@ -18,6 +18,7 @@ type TileSetEntry struct {
 }
 
 type TileSets struct {
+	// TODO: idea - change to resources and add text atlas and template maps
 	entries map[uint32]TileSetEntry
 	pics    map[uint32]pixel.Picture
 }

@@ -1,4 +1,4 @@
-package pixelmap
+package pixeltmx
 
 import (
 	"image"
