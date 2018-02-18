@@ -25,6 +25,8 @@ const (
 	GIDMask                 uint32 = ^(FlippedHorizontallyFlag | FlippedVerticallyFlag | FlippedDiagonallyFlag)
 )
 
+// TileIterator provides a generic access method for TMX Tiles with different
+// encoding methods.
 type TileIterator interface {
 	Next() bool
 	Error() error

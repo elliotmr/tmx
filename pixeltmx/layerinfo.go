@@ -9,6 +9,10 @@ import (
 	"github.com/pkg/errors"
 )
 
+// LayerInfo provides drawing information for the layer, it holds the
+// recursively calculated offset, visibility, and color information, as
+// well as a reference to the base map data. It prevides easy methods
+// translating between tmx and pixel world coordinates.
 type LayerInfo struct {
 	mapData *tmx.Map
 	layer   *tmx.Layer

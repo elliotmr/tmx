@@ -2,9 +2,9 @@ package pixeltmx
 
 import (
 	"fmt"
-	"strings"
-	"strconv"
 	"math"
+	"strconv"
+	"strings"
 
 	"github.com/elliotmr/tmx"
 	"github.com/faiface/pixel"
@@ -24,10 +24,10 @@ type ObjectDrawer struct {
 
 func NewObjectDrawer(li *LayerInfo, ts *TileSets) (*ObjectDrawer, error) {
 	od := &ObjectDrawer{
-		ts:          ts,
-		li:          li,
+		ts:              ts,
+		li:              li,
 		currentFirstGID: math.MaxUint64,
-		batches: make([]*pixel.Batch, 0),
+		batches:         make([]*pixel.Batch, 0),
 	}
 	return od, od.Update()
 }
@@ -64,7 +64,7 @@ func (od *ObjectDrawer) createMatrix(object *tmx.Object) pixel.Matrix {
 	v := getPosition(object, od.li)
 	m := pixel.IM.Moved(v)
 	if object.Rotation != nil {
-		m = m.Rotated(v, *object.Rotation * -math.Pi/180.0)
+		m = m.Rotated(v, *object.Rotation*-math.Pi/180.0)
 	}
 	fmt.Println("Matrix: ", m)
 	return m
@@ -98,7 +98,7 @@ func (od *ObjectDrawer) Update() error {
 			}
 			imd.Push(pixel.V(0, 0))
 			imd.Ellipse(pixel.V(*obj.Width/2, *obj.Height/2), 0)
-			imd.Draw(od.batches[len(od.batches) - 1])
+			imd.Draw(od.batches[len(od.batches)-1])
 		case obj.Point != nil:
 			// TODO
 		case obj.Polygon != nil:
@@ -112,7 +112,7 @@ func (od *ObjectDrawer) Update() error {
 			if od.currentFirstGID != 0 {
 				od.batches = append(od.batches, pixel.NewBatch(&pixel.TrianglesData{}, nil))
 			}
-			imd.Draw(od.batches[len(od.batches) - 1])
+			imd.Draw(od.batches[len(od.batches)-1])
 		case obj.Polyline != nil:
 			imd := od.createIMD(obj)
 			l, err := getLine(obj.Polyline.Points, od.li)
@@ -122,17 +122,17 @@ func (od *ObjectDrawer) Update() error {
 			imd.EndShape = imdraw.RoundEndShape
 			imd.Push(l...)
 			imd.Line(10)
-			imd.Draw(od.batches[len(od.batches) - 1])
+			imd.Draw(od.batches[len(od.batches)-1])
 		case obj.Text != nil:
 			// TODO: font, style handling
 			at := text.NewAtlas(basicfont.Face7x13, text.ASCII)
 			txt := text.New(od.li.TMXToPixelRect(obj.X, obj.Y, 0, *obj.Height).Center(), at)
 			fmt.Fprint(txt, obj.Text.Text)
-			if od.currentFirstGID != math.MaxUint32 + 1 {
+			if od.currentFirstGID != math.MaxUint32+1 {
 				od.batches = append(od.batches, pixel.NewBatch(&pixel.TrianglesData{}, at.Picture()))
 				od.currentFirstGID = math.MaxUint32 + 1
 			}
-			txt.Draw(od.batches[len(od.batches) - 1], pixel.IM)
+			txt.Draw(od.batches[len(od.batches)-1], pixel.IM)
 		default: // Box
 			imd := od.createIMD(obj)
 			if obj.Width == nil || obj.Height == nil {
@@ -140,7 +140,7 @@ func (od *ObjectDrawer) Update() error {
 			}
 			imd.Push(pixel.V(-(*obj.Width/2), -(*obj.Height/2)), pixel.V(*obj.Width/2, *obj.Height/2))
 			imd.Rectangle(0)
-			imd.Draw(od.batches[len(od.batches) - 1])
+			imd.Draw(od.batches[len(od.batches)-1])
 		}
 	}
 	return nil

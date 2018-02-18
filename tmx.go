@@ -76,6 +76,9 @@ type Frame struct {
 	Duration float64 `xml:"duration,attr"` // How long (in milliseconds) this frame should be displayed before advancing to the next frame.
 }
 
+// Layer can hold any of the following tmx elements: <layer>, <objectgroup>,
+// <imagelayer>, or <group>. You can determine the base type by checking the
+// XMLName field.
 type Layer struct {
 	XMLName xml.Name
 

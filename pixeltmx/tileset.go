@@ -12,14 +12,15 @@ import (
 	"github.com/pkg/errors"
 )
 
-type TileSetEntry struct {
+type tileSetEntry struct {
 	data     *pixel.TrianglesData
 	firstGID uint32
 }
 
+// TileSets holds the
 type TileSets struct {
 	// TODO: idea - change to resources and add text atlas and template maps
-	entries map[uint32]TileSetEntry
+	entries map[uint32]tileSetEntry
 	pics    map[uint32]pixel.Picture
 }
 
@@ -41,7 +42,7 @@ func (ts *TileSets) FillTileAndMod(id uint32, vec pixel.Vec, rbga pixel.RGBA, t 
 
 func LoadTileSets(mapData *tmx.Map) (*TileSets, error) {
 	ts := &TileSets{
-		entries: make(map[uint32]TileSetEntry),
+		entries: make(map[uint32]tileSetEntry),
 		pics:    make(map[uint32]pixel.Picture),
 	}
 	for _, set := range mapData.TileSets {
@@ -75,7 +76,7 @@ func LoadTileSets(mapData *tmx.Map) (*TileSets, error) {
 			if minX < bounds.Min.X || minY < bounds.Min.Y || maxX > bounds.Max.X || maxY > bounds.Max.Y {
 				return nil, errors.Errorf("tile %d bounds outside of texture bounds (%f, %f, %f, %f)", t.ID, minX, minY, maxX, maxY)
 			}
-			ts.entries[t.ID+set.FirstGID] = TileSetEntry{
+			ts.entries[t.ID+set.FirstGID] = tileSetEntry{
 				data:     createTriangleData(pixel.R(minX, minY, maxX, maxY)),
 				firstGID: set.FirstGID,
 			}

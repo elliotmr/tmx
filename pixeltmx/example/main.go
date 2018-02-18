@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/elliotmr/tmx/pixeltmx"
 	"github.com/elliotmr/tmx"
+	"github.com/elliotmr/tmx/pixeltmx"
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
 	"golang.org/x/image/colornames"
