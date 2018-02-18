@@ -13,8 +13,8 @@
   - [ ] Tile Rendering
   - [x] Ellipse Rendering
   - [ ] Point Rendering
-  - [ ] Polygon Rendering
-  - [ ] Polyline Rendering
+  - [x] Polygon Rendering
+  - [x] Polyline Rendering
   - [ ] Text Rendering
 - [x] Image Layer Rendering
-- [ ] Layer Group Rendering
+- [x] Layer Group Rendering

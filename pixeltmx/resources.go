@@ -18,8 +18,9 @@ type tileSetEntry struct {
 	source   string
 }
 
-// Resources holds all the raw resources required for rendering a TMX map. This
-// includes tilesets and tileset pictures, raw images, object templates, etc.
+// Resources holds all the raw images and miscellaneous files required for
+// rendering a TMX map. This includes tilesets and tileset pictures, raw
+// images, object templates, etc.
 type Resources struct {
 	// TODO: add text atlas and template maps
 	path    string

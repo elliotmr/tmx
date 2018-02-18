@@ -27,7 +27,7 @@ type Drawer interface {
 	Draw(target pixel.Target)
 }
 
-// NewDrawer create a new Drawer which will draw the layer and recursively all child layers.
+// NewDrawer creates a Drawer which will render the layer and recursively draw all child layers.
 func NewDrawer(resources *Resources, parent Drawer, layer *tmx.Layer) (Drawer, error) {
 	info, err := newLayerInfo(parent.Info(), layer)
 	if err != nil {
@@ -46,8 +46,7 @@ func NewDrawer(resources *Resources, parent Drawer, layer *tmx.Layer) (Drawer, e
 	return nil, errors.Errorf("invalid layer type: %s", info.layer.XMLName.Local)
 }
 
-// NewRootDrawer will create a special Drawer that will recursively draw the entire
-// tmx map.
+// NewRootDrawer will create a special Drawer that will recursively draw the entire tmx map.
 func NewRootDrawer(resources *Resources, mapData *tmx.Map) (Drawer, error) {
 	info := &LayerInfo{
 		mapData: mapData,
