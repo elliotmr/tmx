@@ -48,4 +48,3 @@ func (gd *groupDrawer) Update() error {
 	}
 	return nil
 }
-

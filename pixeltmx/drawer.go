@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Drawer Types
 const (
 	TileLayerDrawer = iota
 	ObjectGroupDrawer
@@ -45,18 +46,17 @@ func NewDrawer(resources *Resources, parent Drawer, layer *tmx.Layer) (Drawer, e
 	return nil, errors.Errorf("invalid layer type: %s", info.layer.XMLName.Local)
 }
 
-
 // NewRootDrawer will create a special Drawer that will recursively draw the entire
 // tmx map.
-func NewRootDrawer(resources *Resources, mapData *tmx.Map) (*groupDrawer, error) {
+func NewRootDrawer(resources *Resources, mapData *tmx.Map) (Drawer, error) {
 	info := &LayerInfo{
 		mapData: mapData,
-		layer: nil,
-		w: int(mapData.Width),
-		h: int(mapData.Height),
-		offX: 0.0,
-		offY: 0.0,
-		color: pixel.Alpha(1.0),
+		layer:   nil,
+		w:       int(mapData.Width),
+		h:       int(mapData.Height),
+		offX:    0.0,
+		offY:    0.0,
+		color:   pixel.Alpha(1.0),
 	}
 	gd := &groupDrawer{
 		info:     info,

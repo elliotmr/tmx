@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Map Definition: http://doc.mapeditor.org/en/latest/reference/tmx-map-format/#map
 type Map struct {
 	Version         string  `xml:"version,attr"`                   // The TMX format version. Was “1.0” so far, and will be incremented to match minor Tiled releases.
 	TiledVersion    string  `xml:"tiledversion,attr"`              // The Tiled version used to save the file (since Tiled 1.0.1). May be a date (for snapshot builds).
@@ -28,6 +29,7 @@ type Map struct {
 	Layers     []*Layer    `xml:",any"`
 }
 
+// TileSet Definition: http://doc.mapeditor.org/en/latest/reference/tmx-map-format/#tileset
 type TileSet struct {
 	FirstGID   uint32 `xml:"firstgid,attr"`   // The first global tile ID of this tileset (this global ID maps to the first tile in this tileset).
 	Source     string `xml:"source,attr"`     // If this tileset is stored in an external TSX (Tile Set XML) file, this attribute refers to that file. That TSX file has the same structure as the <tileset> element described here. (There is the firstgid attribute missing and this source attribute is also not there. These two attributes are kept in the TMX map, since they are map specific.)
@@ -47,11 +49,13 @@ type TileSet struct {
 	// TODO: Add Wangsets
 }
 
+// TileOffset Definition: http://doc.mapeditor.org/en/latest/reference/tmx-map-format/#tileoffset
 type TileOffset struct {
 	X int32 `xml:"x,attr"` // Horizontal offset in pixels
 	Y int32 `xml:"y,attr"` // Vertical offset in pixels (positive is down)
 }
 
+// Terrain Definition: http://doc.mapeditor.org/en/latest/reference/tmx-map-format/#terrain
 type Terrain struct {
 	Name string `xml:"name,attr"` // The name of the terrain type.
 	Tile uint32 `xml:"tile,attr"` // The local tile-id of the tile that represents the terrain visually.
@@ -59,6 +63,7 @@ type Terrain struct {
 	Properties *Properties `xml:"properties,omitempty"`
 }
 
+// Tile Definition: http://doc.mapeditor.org/en/latest/reference/tmx-map-format/#tile
 type Tile struct {
 	ID          uint32   `xml:"id,attr"`                    // The local tile ID within its tileset.
 	Type        *string  `xml:"type,attr,omitempty"`        // The type of the tile. Refers to an object type and is used by tile objects. (optional) (since 1.0)
@@ -71,14 +76,18 @@ type Tile struct {
 	Animation   []*Frame    `xml:"animation,omitempty"`
 }
 
+// Frame Definition: http://doc.mapeditor.org/en/latest/reference/tmx-map-format/#frame
 type Frame struct {
 	TileID   uint32  `xml:"tileid,attr"`   // The local ID of a tile within the parent <tileset>.
 	Duration float64 `xml:"duration,attr"` // How long (in milliseconds) this frame should be displayed before advancing to the next frame.
 }
 
 // Layer can hold any of the following tmx elements: <layer>, <objectgroup>,
-// <imagelayer>, or <group>. You can determine the base type by checking the
-// XMLName field.
+// <imagelayer>, or <group>.
+// Tile Layer Definition: http://doc.mapeditor.org/en/latest/reference/tmx-map-format/#layer
+// Object Group Definition: http://doc.mapeditor.org/en/latest/reference/tmx-map-format/#objectgroup
+// Image Layer Definition: http://doc.mapeditor.org/en/latest/reference/tmx-map-format/#imagelayer
+// Group Layer Definition: http://doc.mapeditor.org/en/latest/reference/tmx-map-format/#group
 type Layer struct {
 	XMLName xml.Name
 
@@ -99,6 +108,7 @@ type Layer struct {
 	Layers     []*Layer    `xml:",any"`
 }
 
+// Data Definition: http://doc.mapeditor.org/en/latest/reference/tmx-map-format/#data
 type Data struct {
 	Encoding    *string `xml:"encoding,attr,omitempty"`    // The encoding used to encode the tile layer data. When used, it can be “base64” and “csv” at the moment.
 	Compression *string `xml:"compression,attr,omitempty"` // The compression used to compress the tile layer data. Tiled supports “gzip” and “zlib”.
@@ -113,6 +123,7 @@ type TileData struct {
 	GID uint32 `xml:"gid"`
 }
 
+// Chunk Definition: http://doc.mapeditor.org/en/latest/reference/tmx-map-format/#chunk
 type Chunk struct {
 	X      float64 `xml:"x,attr"`      // The x coordinate of the chunk in tiles.
 	Y      float64 `xml:"y,attr"`      // The y coordinate of the chunk in tiles.
@@ -123,6 +134,7 @@ type Chunk struct {
 	Data     []byte     `xml:",innerxml"`
 }
 
+// Object Definition: http://doc.mapeditor.org/en/latest/reference/tmx-map-format/#object
 type Object struct {
 	ID       uint32   `xml:"id,attr"`                 // Unique ID of the object. Each object that is placed on a map gets a unique id. Even if an object was deleted, no object gets the same ID. Can not be changed in Tiled. (since Tiled 0.11)
 	Name     string   `xml:"name,attr"`               // The name of the object. An arbitrary string.
@@ -143,18 +155,31 @@ type Object struct {
 	Text     *Text     `xml:"text,omitempty"`
 }
 
+// Ellipse is used to mark an object as an ellipse. The existing x, y, width
+// and height attribu0tes are used to determine the size of the ellipse.
 type Ellipse struct{}
 
+// Point is used to mark an object as a point. The existing x and y attributes
+// are used to determine the position of the point.
 type Point struct{}
 
+// Polygon objects are made up of a space-delimited list of x,y coordinates.
+// The origin for these coordinates is the location of the parent object. By
+// default, the first point is created as 0,0 denoting that the point will
+// originate exactly where the object is placed.
 type Polygon struct {
 	Points string `xml:"points,attr"` // A list of x,y coordinates in pixels
 }
 
+// Polyline objects are made up of a space-delimited list of x,y coordinates.
+// The origin for these coordinates is the location of the parent object. By
+// default, the first point is created as 0,0 denoting that the point will
+// originate exactly where the object is placed.
 type Polyline struct {
 	Points string `xml:"points,attr"`
 }
 
+// Text Definition: http://doc.mapeditor.org/en/latest/reference/tmx-map-format/#text
 type Text struct {
 	FontFamily *string `xml:"fontfamily,attr,omitempty"` // The font family used (default: “sans-serif”)
 	PixelSize  *int    `xml:"pixelsize,attr,omitempty"`  // The size of the font in pixels (not using points, because other sizes in the TMX format are also using pixels) (default: 16)
@@ -171,6 +196,7 @@ type Text struct {
 	Text string `xml:",innerxml"`
 }
 
+// Image Definition: http://doc.mapeditor.org/en/latest/reference/tmx-map-format/#image
 type Image struct {
 	Format string  `xml:"format,attr,omitempty"` // Used for embedded images, in combination with a data child element. Valid values are file extensions like png, gif, jpg, bmp, etc.
 	Source string  `xml:"source,attr"`           // The reference to the tileset image file (Tiled supports most common image formats).
@@ -181,16 +207,19 @@ type Image struct {
 	Data *Data `xml:"data,omitempty"`
 }
 
+// Properties Definition: http://doc.mapeditor.org/en/latest/reference/tmx-map-format/#properties
 type Properties struct {
 	Properties []Property `xml:"property"`
 }
 
+// Property Definition: http://doc.mapeditor.org/en/latest/reference/tmx-map-format/#property
 type Property struct {
 	Name  string  `xml:"name,attr"`           // The name of the property.
 	Type  *string `xml:"type,attr,omitempty"` // The type of the property. Can be string (default), int, float, bool, color or file (since 0.16, with color and file added in 0.17).
 	Value string  `xml:"value,attr"`          // The value of the property.
 }
 
+// Template Definition: http://doc.mapeditor.org/en/latest/reference/tmx-map-format/#template
 type Template struct {
 	TileSet *TileSet `xml:"tileset,omitempty"`
 	Object  *Object  `xml:"object,omitempty"`
@@ -204,7 +233,13 @@ func Load(file *os.File) (*Map, error) {
 	err := decoder.Decode(tmxMap)
 	for _, ts := range tmxMap.TileSets {
 		if ts.Source != "" {
-			tsxFile, err := os.Open(filepath.Join(filepath.Dir(file.Name()), ts.Source))
+			var source string
+			if filepath.IsAbs(ts.Source) {
+				source = ts.Source
+			} else {
+				source = filepath.Join(filepath.Dir(file.Name()), ts.Source)
+			}
+			tsxFile, err := os.Open(source)
 			if err != nil {
 				return nil, errors.Wrap(err, "unable to open tileset source file")
 			}

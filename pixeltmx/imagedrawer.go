@@ -1,8 +1,7 @@
 package pixeltmx
 
 import (
-	"image"
-	"os"
+	"path/filepath"
 
 	"github.com/faiface/pixel"
 	"github.com/pkg/errors"
@@ -10,6 +9,7 @@ import (
 
 type imageLayerDrawer struct {
 	resources *Resources
+	source    string
 	info      *LayerInfo
 	sprite    *pixel.Sprite
 }
@@ -18,43 +18,39 @@ func newImageLayerDriver(resources *Resources, info *LayerInfo) (*imageLayerDraw
 	if info.layer.Image == nil {
 		return nil, errors.New("image not set for image layer")
 	}
-	id := &imageLayerDrawer{
-		info: info,
+	ild := &imageLayerDrawer{
+		resources: resources,
+		info:      info,
 	}
-	return id, id.Update()
+	if filepath.IsAbs(info.layer.Image.Source) {
+		ild.source = filepath.Clean(info.layer.Image.Source)
+	} else {
+		ild.source = filepath.Join(resources.path, info.layer.Image.Source)
+	}
+
+	return ild, ild.Update()
 }
 
-func (id *imageLayerDrawer) Type() int {
+func (ild *imageLayerDrawer) Type() int {
 	return ImageLayerDrawer
 }
 
-func (id *imageLayerDrawer) Info() *LayerInfo {
-	return id.info
+func (ild *imageLayerDrawer) Info() *LayerInfo {
+	return ild.info
 }
 
-func (id *imageLayerDrawer) Update() error {
-	// TODO: Move to resources
-	imageFile, err := os.Open(id.info.layer.Image.Source)
-	if err != nil {
-		return errors.Wrap(err, "unable to open image")
-	}
-	tilesetImg, _, err := image.Decode(imageFile)
-	imageFile.Close()
-	if err != nil {
-		return errors.Wrap(err, "unable to decode image")
-	}
-
-	pic := pixel.PictureDataFromImage(tilesetImg)
-	id.sprite = pixel.NewSprite(pic, pic.Bounds())
+func (ild *imageLayerDrawer) Update() error {
+	pic := ild.resources.images[ild.source]
+	ild.sprite = pixel.NewSprite(pic, pic.Bounds())
 	return nil
 }
 
-func (id *imageLayerDrawer) Draw(t pixel.Target) {
-	vec := id.info.TMXToPixelRect(
-		id.info.offX,
-		id.info.offY,
-		id.sprite.Frame().W(),
-		id.sprite.Frame().H(),
+func (ild *imageLayerDrawer) Draw(t pixel.Target) {
+	vec := ild.info.TMXToPixelRect(
+		ild.info.offX,
+		ild.info.offY,
+		ild.sprite.Frame().W(),
+		ild.sprite.Frame().H(),
 	).Center()
-	id.sprite.DrawColorMask(t, pixel.IM.Moved(vec), id.info.color)
+	ild.sprite.DrawColorMask(t, pixel.IM.Moved(vec), ild.info.color)
 }

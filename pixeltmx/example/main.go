@@ -22,7 +22,7 @@ func run() {
 	if err != nil {
 		panic(err)
 	}
-	resources, err := pixeltmx.LoadResources(mapData)
+	resources, err := pixeltmx.LoadResources(mapData, "")
 	if err != nil {
 		panic(err)
 	}

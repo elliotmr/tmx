@@ -11,7 +11,6 @@ type tileLayerDrawer struct {
 	drawers   map[uint32]*pixel.Drawer
 }
 
-
 func newTileLayerDrawer(resources *Resources, info *LayerInfo) (*tileLayerDrawer, error) {
 	ld := &tileLayerDrawer{
 		resources: resources,
@@ -19,10 +18,13 @@ func newTileLayerDrawer(resources *Resources, info *LayerInfo) (*tileLayerDrawer
 		drawers:   make(map[uint32]*pixel.Drawer),
 	}
 
-	for gid, pic := range resources.pics {
-		ld.drawers[gid] = &pixel.Drawer{
-			Triangles: &pixel.TrianglesData{},
-			Picture:   pic,
+	for _, entry := range resources.entries {
+		_, exists := ld.drawers[entry.firstGID]
+		if !exists {
+			ld.drawers[entry.firstGID] = &pixel.Drawer{
+				Triangles: &pixel.TrianglesData{},
+				Picture:   ld.resources.images[entry.source],
+			}
 		}
 	}
 
@@ -55,9 +57,9 @@ func (ld *tileLayerDrawer) Update() error {
 				drawer.Triangles.SetLen(i * 6)
 			}
 			cellIndex := int(iter.GetIndex())
-			vx, vy, _ := ld.info.CellCoordinates(cellIndex)
+			loc, _ := ld.info.TileRect(cellIndex)
 			triangleSlice := drawer.Triangles.Slice((i-1)*6, i*6)
-			ld.resources.FillTileAndMod(iter.Get().GID, pixel.V(vx, vy), ld.info.color, triangleSlice)
+			ld.resources.fillTileAndMod(iter.Get().GID, loc.Center(), ld.info.color, triangleSlice)
 			i++
 		}
 		drawer.Triangles.SetLen(i * 6)
@@ -70,4 +72,3 @@ func (ld *tileLayerDrawer) Draw(t pixel.Target) {
 		d.Draw(t)
 	}
 }
-

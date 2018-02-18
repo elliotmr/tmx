@@ -4,60 +4,88 @@ import (
 	"image"
 	"os"
 
-	_ "image/png"
+	_ "image/png" // This is required for the parsing png resource files
 
 	"github.com/elliotmr/tmx"
 	"github.com/faiface/pixel"
 	"github.com/pkg/errors"
+	"path/filepath"
 )
 
 type tileSetEntry struct {
 	data     *pixel.TrianglesData
 	firstGID uint32
+	source   string
 }
 
-// Resources holds the
+// Resources holds all the raw resources required for rendering a TMX map. This
+// includes tilesets and tileset pictures, raw images, object templates, etc.
 type Resources struct {
-	// TODO: idea - change to resources and add text atlas and template maps
+	// TODO: add text atlas and template maps
+	path    string
 	entries map[uint32]tileSetEntry
-	pics    map[uint32]pixel.Picture
+	images  map[string]pixel.Picture
 }
 
-func (ts *Resources) FillTileAndMod(id uint32, vec pixel.Vec, rbga pixel.RGBA, t pixel.Triangles) {
-	_, exists := ts.entries[id]
-	if !exists {
-		return
+func (r *Resources) loadImage(source string) (string, error) {
+	if filepath.IsAbs(source) {
+		source = filepath.Clean(source)
+	} else {
+		source = filepath.Join(r.path, source)
 	}
-	data, ok := ts.entries[id].data.Copy().(*pixel.TrianglesData)
-	if !ok {
-		return
+	imageFile, err := os.Open(source)
+	if err != nil {
+		return "", errors.Wrap(err, "unable to open tileset image")
 	}
-	for i := range *data {
-		(*data)[i].Position = (*data)[i].Position.Add(vec)
-		(*data)[i].Color = rbga
+	defer imageFile.Close()
+	tilesetImg, _, err := image.Decode(imageFile)
+	if err != nil {
+		return "", errors.Wrap(err, "unable to decode tileset image")
 	}
-	t.Update(data)
+	pic := pixel.PictureDataFromImage(tilesetImg)
+	r.images[source] = pic
+	return source, nil
 }
 
-func LoadResources(mapData *tmx.Map) (*Resources, error) {
-	ts := &Resources{
+func (r *Resources) loadLayer(layer *tmx.Layer) error {
+	// Load Images
+	if layer.Image != nil {
+		_, err := r.loadImage(layer.Image.Source)
+		if err != nil {
+			return err
+		}
+	}
+	// TODO: Load Templates
+
+	// walk the children recursively.
+	for _, child := range layer.Layers {
+		err := r.loadLayer(child)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// LoadResources searches through the tmx map tree and loads any resources found. If
+// the resources are located somewhere other than the current working directory, the
+// location should be supplied in the path string.
+func LoadResources(mapData *tmx.Map, path string) (*Resources, error) {
+	// TODO: figure out how to abstract the file system (maybe use Afero?)
+	if path == "" {
+		path = "."
+	}
+	r := &Resources{
+		path:    path,
 		entries: make(map[uint32]tileSetEntry),
-		pics:    make(map[uint32]pixel.Picture),
+		images:  make(map[string]pixel.Picture),
 	}
 	for _, set := range mapData.TileSets {
-		imageFile, err := os.Open(set.Image.Source)
+		source, err := r.loadImage(set.Image.Source)
 		if err != nil {
-			return nil, errors.Wrap(err, "unable to open tileset image")
+			return nil, err
 		}
-		tilesetImg, _, err := image.Decode(imageFile)
-		imageFile.Close()
-		if err != nil {
-			return nil, errors.Wrap(err, "unable to decode tileset image")
-		}
-
-		pic := pixel.PictureDataFromImage(tilesetImg)
-		ts.pics[set.FirstGID] = pic
-		bounds := pic.Bounds()
+		bounds := r.images[source].Bounds()
 		// tmx convention right -> down (origin top left), pixel convetion right -> up (origin bottom left)
 		// this means we have to flip the row index
 		rows := set.TileCount / set.Columns
@@ -75,14 +103,37 @@ func LoadResources(mapData *tmx.Map) (*Resources, error) {
 			if minX < bounds.Min.X || minY < bounds.Min.Y || maxX > bounds.Max.X || maxY > bounds.Max.Y {
 				return nil, errors.Errorf("tile %d bounds outside of texture bounds (%f, %f, %f, %f)", t.ID, minX, minY, maxX, maxY)
 			}
-			ts.entries[t.ID+set.FirstGID] = tileSetEntry{
+			r.entries[t.ID+set.FirstGID] = tileSetEntry{
 				data:     createTriangleData(pixel.R(minX, minY, maxX, maxY)),
 				firstGID: set.FirstGID,
+				source:   source,
 			}
 		}
 	}
 
-	return ts, nil
+	for _, l := range mapData.Layers {
+		err := r.loadLayer(l)
+		if err != nil {
+			return nil, errors.Wrap(err, "unable to load resources")
+		}
+	}
+	return r, nil
+}
+
+func (r *Resources) fillTileAndMod(id uint32, vec pixel.Vec, rbga pixel.RGBA, t pixel.Triangles) {
+	_, exists := r.entries[id]
+	if !exists {
+		return
+	}
+	data, ok := r.entries[id].data.Copy().(*pixel.TrianglesData)
+	if !ok {
+		return
+	}
+	for i := range *data {
+		(*data)[i].Position = (*data)[i].Position.Add(vec)
+		(*data)[i].Color = rbga
+	}
+	t.Update(data)
 }
 
 func createTriangleData(r pixel.Rect) *pixel.TrianglesData {

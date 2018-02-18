@@ -80,7 +80,6 @@ func (ogd *objectGroupDrawer) createIMD(obj *tmx.Object) *imdraw.IMDraw {
 	return imd
 }
 
-
 func (ogd *objectGroupDrawer) Type() int {
 	return ObjectGroupDrawer
 }

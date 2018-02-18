@@ -105,34 +105,38 @@ func extractLayerColor(layer *tmx.Layer) (pixel.RGBA, error) {
 			return rgba, errors.Errorf("invalid color: %s", s)
 		}
 		rgba.Mul(pixel.RGBA{
-			float64(r) / 255.0,
-			float64(g) / 255.0,
-			float64(b) / 255.0,
-			float64(a) / 255.0,
+			R: float64(r) / 255.0,
+			G: float64(g) / 255.0,
+			B: float64(b) / 255.0,
+			A: float64(a) / 255.0,
 		})
 	}
 	return rgba, nil
 }
 
-func (li *LayerInfo) CellCoordinates(cell int) (float64, float64, error) {
+// TileRect returns the pixel.Rect of a TMX map tile in pixel world coordinates.
+func (li *LayerInfo) TileRect(cell int) (pixel.Rect, error) {
 	if cell > (li.w * li.h) {
-		return 0, 0, errors.Errorf("cell out of range (%d > %d)", cell, li.w*li.h)
+		return pixel.R(0, 0, 0, 0), errors.Errorf("cell out of range (%d > %d)", cell, li.w*li.h)
 	}
 	tw := float64(li.mapData.TileWidth)
 	th := float64(li.mapData.TileHeight)
-	center := li.TMXToPixelRect(
+	return li.TMXToPixelRect(
 		float64(cell%li.w)*tw,
 		float64(cell/li.h)*th,
 		tw,
 		th,
-	).Center()
-	return center.X, center.Y, nil
+	), nil
 }
 
+// TMXToPixelVec translates TMX x and y coordinates to a pixel.Vect in pixel
+// world coordinates.
 func (li *LayerInfo) TMXToPixelVec(x, y float64) pixel.Vec {
 	return pixel.V(x, float64(li.mapData.TileHeight*li.mapData.Height)-y)
 }
 
+// TMXToPixelRect translates a TMX four-tuple (x, y, w, h) to a pixel.Rect in
+// pixel world coordinates.
 func (li *LayerInfo) TMXToPixelRect(x, y, w, h float64) pixel.Rect {
 	bottomLeft := li.TMXToPixelVec(x, y+h)
 	topRight := li.TMXToPixelVec(x+w, y)

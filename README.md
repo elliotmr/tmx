@@ -1,28 +1,10 @@
-# tiled
-Go library for tiled
+# tmx [![GoDoc](https://godoc.org/github.com/elliotmr/tmx?status.svg)](https://godoc.org/github.com/elliotmr/tmx) [![Go Report Card](https://goreportcard.com/badge/github.com/elliotmr/tmx)](https://goreportcard.com/report/github.com/elliotmr/tmx)
+Go library for tiled tmx maps [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## tmx features
+## features
 - [x] Deserialization of TMX xml format
 - [x] Serialization of TMX xml format
-- [ ] Custom Binary Serialization using JAMS
+- [x] Iterator for Tile Rendering
+- [ ] Draw-Order Support
 - [ ] Template File Support
 - [ ] Wang Set Support
-
-## pixeltmx features
-- [x] \(Multiple) Tileset Support
-  - [ ] Tileset Offset Support
-- [x] Tile Layer Rendering
-  - [x] Visbility Support
-  - [x] Opacity Support
-  - [x] Offset Support
-  - [ ] Draw-order Support
-- [x] Object Layer Rendering
-  - [x] Color Support
-  - [ ] Tile Rendering
-  - [x] Ellipse Rendering
-  - [ ] Point Rendering
-  - [ ] Polygon Rendering
-  - [ ] Polyline Rendering
-  - [ ] Text Rendering
-- [x] Image Layer Rendering
-- [ ] Layer Group Rendering

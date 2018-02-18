@@ -11,6 +11,7 @@ import (
 	"strconv"
 )
 
+// TileInstance is about to get completely refactored.
 type TileInstance struct {
 	GID                 uint32
 	FlippedHorizontally bool
@@ -18,6 +19,7 @@ type TileInstance struct {
 	FlippedDiagonally   bool
 }
 
+// Constants for parsing GID data
 const (
 	FlippedHorizontallyFlag uint32 = 0x80000000
 	FlippedVerticallyFlag   uint32 = 0x40000000
@@ -65,9 +67,9 @@ type csvIterator struct {
 	d     *Data
 	start int
 	end   int
-	done  bool
-	err   error
 	i     uint32
+	err   error
+	done  bool
 }
 
 func (ci *csvIterator) Next() bool {
@@ -152,7 +154,6 @@ func (d *Data) Iter() (TileIterator, error) {
 	case d.Encoding == nil && d.Compression == nil:
 		return &xmlIterator{d: d}, nil
 	case *d.Encoding == "csv":
-
 		return &csvIterator{}, nil
 	case *d.Encoding == "base64":
 		var r io.Reader
