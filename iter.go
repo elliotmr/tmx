@@ -11,12 +11,29 @@ import (
 	"strconv"
 )
 
-// TileInstance is about to get completely refactored.
-type TileInstance struct {
-	GID                 uint32
-	FlippedHorizontally bool
-	FlippedVertically   bool
-	FlippedDiagonally   bool
+// TileInstance is a single tile instance on a tile layer, it includes
+// the Global ID, and the render flip flags (horizontal, vertical, and
+// diagonal)
+type TileInstance uint32
+
+// GID is the raw Global ID extracted from the TileInstance
+func (ti TileInstance) GID() uint32 {
+	return GIDMask & uint32(ti)
+}
+
+// FlippedHorizontally returns the horizontal flip render flag
+func (ti TileInstance) FlippedHorizontally() bool {
+	return FlippedHorizontallyFlag & uint32(ti) > 0
+}
+
+// FlippedVertically returns the vertical flip render flag
+func (ti TileInstance) FlippedVertically() bool {
+	return FlippedVerticallyFlag & uint32(ti) > 0
+}
+
+// FlippedDiagonally returns the diagonal flip render flag
+func (ti TileInstance) FlippedDiagonally() bool {
+	return FlippedDiagonallyFlag & uint32(ti) > 0
 }
 
 // Constants for parsing GID data
@@ -51,12 +68,7 @@ func (xi *xmlIterator) Error() error {
 }
 
 func (xi *xmlIterator) Get() TileInstance {
-	return TileInstance{
-		GID:                 GIDMask & xi.d.TileData[xi.i].GID,
-		FlippedHorizontally: xi.d.TileData[xi.i].GID&FlippedHorizontallyFlag > 0,
-		FlippedVertically:   xi.d.TileData[xi.i].GID&FlippedVerticallyFlag > 0,
-		FlippedDiagonally:   xi.d.TileData[xi.i].GID&FlippedDiagonallyFlag > 0,
-	}
+	return TileInstance(xi.d.TileData[xi.i].GID)
 }
 
 func (xi *xmlIterator) GetIndex() uint32 {
@@ -94,15 +106,10 @@ func (ci *csvIterator) Get() TileInstance {
 	g, err := strconv.ParseUint(string(ci.d.Data[ci.start:ci.end]), 10, 32)
 	if err != nil {
 		ci.err = err
-		return TileInstance{}
+		return 0
 	}
 	gid := uint32(g)
-	return TileInstance{
-		GID:                 GIDMask & gid,
-		FlippedHorizontally: gid&FlippedHorizontallyFlag > 0,
-		FlippedVertically:   gid&FlippedVerticallyFlag > 0,
-		FlippedDiagonally:   gid&FlippedDiagonallyFlag > 0,
-	}
+	return TileInstance(gid)
 }
 
 func (ci *csvIterator) GetIndex() uint32 {
@@ -126,12 +133,7 @@ func (bi *b64Iterator) Next() bool {
 		return false
 	}
 	bi.i++
-	bi.tok = TileInstance{
-		GID:                 GIDMask & gid,
-		FlippedHorizontally: gid&FlippedHorizontallyFlag > 0,
-		FlippedVertically:   gid&FlippedVerticallyFlag > 0,
-		FlippedDiagonally:   gid&FlippedDiagonallyFlag > 0,
-	}
+	bi.tok = TileInstance(gid)
 	return true
 }
 
