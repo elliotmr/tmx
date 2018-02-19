@@ -14,6 +14,7 @@ import (
 
 type tileSetEntry struct {
 	data     *pixel.TrianglesData
+	frame    pixel.Rect
 	firstGID uint32
 	source   string
 }
@@ -104,8 +105,10 @@ func LoadResources(mapData *tmx.Map, path string) (*Resources, error) {
 			if minX < bounds.Min.X || minY < bounds.Min.Y || maxX > bounds.Max.X || maxY > bounds.Max.Y {
 				return nil, errors.Errorf("tile %d bounds outside of texture bounds (%f, %f, %f, %f)", t.ID, minX, minY, maxX, maxY)
 			}
+			frame := pixel.R(minX, minY, maxX, maxY)
 			r.entries[t.ID+set.FirstGID] = tileSetEntry{
-				data:     createTriangleData(pixel.R(minX, minY, maxX, maxY)),
+				frame:    frame,
+				data:     createTriangleData(frame),
 				firstGID: set.FirstGID,
 				source:   source,
 			}
@@ -121,17 +124,40 @@ func LoadResources(mapData *tmx.Map, path string) (*Resources, error) {
 	return r, nil
 }
 
-func (r *Resources) fillTileAndMod(id uint32, vec pixel.Vec, rbga pixel.RGBA, t pixel.Triangles) {
-	_, exists := r.entries[id]
+var diagonalFlipMatrix = pixel.Matrix{0, -1, 1, 0, 0, 0}
+var horizontalFlipMatrix = pixel.Matrix{-1, 0, 0, 1, 0, 0}
+var verticalFlipMatrix = pixel.Matrix{1, 0, 0, -1, 0, 0}
+
+func (r *Resources) fillTileAndMod(tile tmx.TileInstance, rect pixel.Rect, rbga pixel.RGBA, t pixel.Triangles) {
+	_, exists := r.entries[tile.GID()]
 	if !exists {
 		return
 	}
-	data, ok := r.entries[id].data.Copy().(*pixel.TrianglesData)
+	data, ok := r.entries[tile.GID()].data.Copy().(*pixel.TrianglesData)
 	if !ok {
 		return
 	}
+
+	if tile.FlippedDiagonally() {
+		for i := range *data {
+			(*data)[i].Position = diagonalFlipMatrix.Project((*data)[i].Position)
+		}
+	}
+
+	if tile.FlippedHorizontally() {
+		for i := range *data {
+			(*data)[i].Position = horizontalFlipMatrix.Project((*data)[i].Position)
+		}
+	}
+
+	if tile.FlippedVertically() {
+		for i := range *data {
+			(*data)[i].Position = verticalFlipMatrix.Project((*data)[i].Position)
+		}
+	}
+
 	for i := range *data {
-		(*data)[i].Position = (*data)[i].Position.Add(vec)
+		(*data)[i].Position = (*data)[i].Position.Add(rect.Center())
 		(*data)[i].Color = rbga
 	}
 	t.Update(data)

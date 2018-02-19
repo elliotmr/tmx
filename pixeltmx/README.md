@@ -10,7 +10,7 @@
   - [ ] Draw-order Support
 - [x] Object Layer Rendering
   - [x] Color Support
-  - [ ] Tile Rendering
+  - [x] Tile Rendering
   - [x] Ellipse Rendering
   - [ ] Point Rendering
   - [x] Polygon Rendering
@@ -18,3 +18,7 @@
   - [ ] Text Rendering
 - [x] Image Layer Rendering
 - [x] Layer Group Rendering
+
+## non-features (at least for now)
+- isometric maps
+- hex maps

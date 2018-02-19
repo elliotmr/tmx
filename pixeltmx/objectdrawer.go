@@ -63,8 +63,50 @@ func getLine(points string, li *LayerInfo) ([]pixel.Vec, error) {
 func (ogd *objectGroupDrawer) createMatrix(object *tmx.Object) pixel.Matrix {
 	v := getPosition(object, ogd.info)
 	m := pixel.IM.Moved(v)
+	topLeft := v
+	if object.Width != nil && object.Height != nil {
+		topLeft = v.Sub(pixel.V(*object.Width/2, -*object.Height/2))
+	}
 	if object.Rotation != nil {
-		m = m.Rotated(v, *object.Rotation*-math.Pi/180.0)
+		m = m.Rotated(topLeft, *object.Rotation*-math.Pi/180.0)
+	}
+	return m
+}
+
+func flipDiagonal(around pixel.Vec, m pixel.Matrix) pixel.Matrix {
+	return pixel.Matrix{m[1], -m[0], m[3], -m[2], m[5] - around.Y + around.X, -m[4] + around.X + around.Y}
+}
+
+func (ogd *objectGroupDrawer) createMatrixTile(tile tmx.TileInstance, frame pixel.Rect, object *tmx.Object) pixel.Matrix {
+	// Get Initial Position
+	v := getPosition(object, ogd.info).Add(pixel.V(0.0, *object.Height))
+	m := pixel.IM.Moved(v)
+
+	// Rotate 90 deg around center for diagonal flip
+	if tile.FlippedDiagonally() {
+		m = flipDiagonal(v, m)
+	}
+
+	xScale := 1.0
+	if object.Width != nil {
+		xScale = *object.Width / frame.W()
+	}
+	if tile.FlippedHorizontally() {
+		xScale = -xScale
+	}
+	yScale := 1.0
+	if object.Height != nil {
+		yScale = *object.Height / frame.H()
+	}
+	if tile.FlippedVertically() {
+		yScale = -yScale
+	}
+
+	m = m.ScaledXY(v, pixel.V(xScale, yScale))
+
+	bottomLeft := v.Sub(pixel.V(*object.Width/2, *object.Height/2))
+	if object.Rotation != nil {
+		m = m.Rotated(bottomLeft, *object.Rotation*-math.Pi/180.0)
 	}
 	return m
 }
@@ -97,7 +139,23 @@ func (ogd *objectGroupDrawer) Update() error {
 		}
 		switch {
 		case obj.GID != nil:
-
+			tile := tmx.TileInstance(*obj.GID)
+			entry, exists := ogd.resources.entries[tile.GID()]
+			if !exists {
+				fmt.Println("invalid object")
+				continue
+			}
+			pic := ogd.resources.images[entry.source]
+			if ogd.currentFirstGID != uint64(entry.firstGID) {
+				ogd.batches = append(ogd.batches, pixel.NewBatch(&pixel.TrianglesData{}, pic))
+				ogd.currentFirstGID = uint64(entry.firstGID)
+			}
+			sprite := pixel.NewSprite(pic, entry.frame)
+			if obj.Width == nil || obj.Height == nil {
+				return errors.New("tile object without width or height set")
+			}
+			m := ogd.createMatrixTile(tile, entry.frame, obj)
+			sprite.Draw(ogd.batches[len(ogd.batches)-1], m)
 		case obj.Ellipse != nil:
 			imd := ogd.createIMD(obj)
 			if obj.Width == nil || obj.Height == nil {

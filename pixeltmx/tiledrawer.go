@@ -49,7 +49,7 @@ func (ld *tileLayerDrawer) Update() error {
 	for gid, drawer := range ld.drawers {
 		i := 1
 		for iter.Next() {
-			tse := ld.resources.entries[iter.Get().GID]
+			tse := ld.resources.entries[iter.Get().GID()]
 			if tse.firstGID != gid {
 				continue
 			}
@@ -59,7 +59,7 @@ func (ld *tileLayerDrawer) Update() error {
 			cellIndex := int(iter.GetIndex())
 			loc, _ := ld.info.TileRect(cellIndex)
 			triangleSlice := drawer.Triangles.Slice((i-1)*6, i*6)
-			ld.resources.fillTileAndMod(iter.Get().GID, loc.Center(), ld.info.color, triangleSlice)
+			ld.resources.fillTileAndMod(iter.Get(), loc, ld.info.color, triangleSlice)
 			i++
 		}
 		drawer.Triangles.SetLen(i * 6)

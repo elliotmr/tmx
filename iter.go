@@ -23,17 +23,17 @@ func (ti TileInstance) GID() uint32 {
 
 // FlippedHorizontally returns the horizontal flip render flag
 func (ti TileInstance) FlippedHorizontally() bool {
-	return FlippedHorizontallyFlag & uint32(ti) > 0
+	return FlippedHorizontallyFlag&uint32(ti) > 0
 }
 
 // FlippedVertically returns the vertical flip render flag
 func (ti TileInstance) FlippedVertically() bool {
-	return FlippedVerticallyFlag & uint32(ti) > 0
+	return FlippedVerticallyFlag&uint32(ti) > 0
 }
 
 // FlippedDiagonally returns the diagonal flip render flag
 func (ti TileInstance) FlippedDiagonally() bool {
-	return FlippedDiagonallyFlag & uint32(ti) > 0
+	return FlippedDiagonallyFlag&uint32(ti) > 0
 }
 
 // Constants for parsing GID data
