@@ -14,7 +14,7 @@ import (
 )
 
 func run() {
-	mapFile, err := os.Open("arena.tmx")
+	mapFile, err := os.Open("orthogonal-outside.tmx")
 	if err != nil {
 		panic(err)
 	}

@@ -142,7 +142,7 @@ func (ogd *objectGroupDrawer) Update() error {
 			tile := tmx.TileInstance(*obj.GID)
 			entry, exists := ogd.resources.entries[tile.GID()]
 			if !exists {
-				fmt.Println("invalid object")
+				fmt.Println("invalid object: ", tile.GID())
 				continue
 			}
 			pic := ogd.resources.images[entry.source]
@@ -174,6 +174,7 @@ func (ogd *objectGroupDrawer) Update() error {
 			}
 			imd.Push(l...)
 			imd.Polygon(0)
+			// BUG(elliotmr): something strange is happening with polygon rendering.
 			if ogd.currentFirstGID != 0 {
 				ogd.batches = append(ogd.batches, pixel.NewBatch(&pixel.TrianglesData{}, nil))
 			}

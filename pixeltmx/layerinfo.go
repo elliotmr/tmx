@@ -123,7 +123,7 @@ func (li *LayerInfo) TileRect(cell int) (pixel.Rect, error) {
 	th := float64(li.mapData.TileHeight)
 	return li.TMXToPixelRect(
 		float64(cell%li.w)*tw,
-		float64(cell/li.h)*th,
+		float64(cell/li.w)*th,
 		tw,
 		th,
 	), nil

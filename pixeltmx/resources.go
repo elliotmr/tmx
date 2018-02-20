@@ -92,21 +92,18 @@ func LoadResources(mapData *tmx.Map, path string) (*Resources, error) {
 		// this means we have to flip the row index
 		rows := set.TileCount / set.Columns
 
-		for _, t := range set.Tiles {
-			if t.ID >= set.TileCount {
-				return nil, errors.Errorf("tile id greater than tilecount (%d > %d)", t.ID, set.TileCount-1)
-			}
-			row := rows - t.ID/set.Columns - 1
-			col := t.ID % set.Columns
+		for id := uint32(0); id < set.TileCount; id++ {
+			row := rows - id/set.Columns - 1
+			col := id % set.Columns
 			minX := float64(set.Margin + col*(set.TileWidth+set.Spacing))
 			minY := float64(set.Margin + row*(set.TileHeight+set.Spacing))
 			maxX := float64(set.Margin + col*(set.TileWidth+set.Spacing) + set.TileWidth)
 			maxY := float64(set.Margin + row*(set.TileHeight+set.Spacing) + set.TileHeight)
 			if minX < bounds.Min.X || minY < bounds.Min.Y || maxX > bounds.Max.X || maxY > bounds.Max.Y {
-				return nil, errors.Errorf("tile %d bounds outside of texture bounds (%f, %f, %f, %f)", t.ID, minX, minY, maxX, maxY)
+				return nil, errors.Errorf("tile %d bounds outside of texture bounds (%f, %f, %f, %f)", id, minX, minY, maxX, maxY)
 			}
 			frame := pixel.R(minX, minY, maxX, maxY)
-			r.entries[t.ID+set.FirstGID] = tileSetEntry{
+			r.entries[id+set.FirstGID] = tileSetEntry{
 				frame:    frame,
 				data:     createTriangleData(frame),
 				firstGID: set.FirstGID,
