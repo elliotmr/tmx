@@ -4,7 +4,6 @@ import (
 	"github.com/hajimehoshi/ebiten"
 	"github.com/pkg/errors"
 	"github.com/elliotmr/tmx"
-	"image"
 )
 
 // Drawer Types
@@ -18,9 +17,9 @@ const (
 type Drawer interface {
 	Type() int
 	Info() *LayerInfo
-	Bounds() image.Rectangle
 	Update() error
 	Draw(image *ebiten.Image) error
+	Image() *ebiten.Image
 }
 
 

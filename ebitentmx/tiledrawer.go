@@ -1,8 +1,6 @@
 package ebitentmx
 
 import (
-	"image"
-
 	"github.com/hajimehoshi/ebiten"
 	"github.com/pkg/errors"
 )
@@ -46,8 +44,8 @@ func (ld *tileLayerDrawer) Info() *LayerInfo {
 	return ld.info
 }
 
-func (ld *tileLayerDrawer) Bounds() image.Rectangle {
-	return ld.image.Bounds()
+func (ld *tileLayerDrawer) Image() *ebiten.Image {
+	return ld.image
 }
 
 func (ld *tileLayerDrawer) Update() error {

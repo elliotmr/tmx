@@ -5,7 +5,6 @@ import (
 
 	"github.com/hajimehoshi/ebiten"
 	"github.com/pkg/errors"
-	"image"
 )
 
 type imageLayerDrawer struct {
@@ -45,8 +44,8 @@ func (ild *imageLayerDrawer) Info() *LayerInfo {
 	return ild.info
 }
 
-func (ild *imageLayerDrawer) Bounds() image.Rectangle {
-	return ild.image.Bounds()
+func (ild *imageLayerDrawer) Image() *ebiten.Image {
+	return ild.image
 }
 
 func (ild *imageLayerDrawer) Update() error {

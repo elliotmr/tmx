@@ -6,7 +6,6 @@ import (
 	"github.com/elliotmr/tmx"
 	"github.com/hajimehoshi/ebiten"
 	"github.com/pkg/errors"
-	"image"
 	"sort"
 )
 
@@ -48,8 +47,8 @@ func (ogd *objectGroupDrawer) Info() *LayerInfo {
 	return ogd.info
 }
 
-func (ogd *objectGroupDrawer) Bounds() image.Rectangle {
-	return ogd.image.Bounds()
+func (ogd *objectGroupDrawer) Image() *ebiten.Image {
+	return ogd.image
 }
 
 func (ogd *objectGroupDrawer) Update() error {

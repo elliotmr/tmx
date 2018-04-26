@@ -30,12 +30,12 @@ func newGroupDrawer(resources *Resources, info *LayerInfo) (*groupDrawer, error)
 
 	var min, max image.Point
 	if len(gd.children) > 0 {
-		min = gd.children[0].Bounds().Min
-		max = gd.children[0].Bounds().Max
+		min = gd.children[0].Image().Bounds().Min
+		max = gd.children[0].Image().Bounds().Max
 	}
 
 	for _, child := range gd.children {
-		bounds := child.Bounds()
+		bounds := child.Image().Bounds()
 		if bounds.Min.X < min.X {
 			min.X = bounds.Min.X
 		}
@@ -71,8 +71,14 @@ func (gd *groupDrawer) Info() *LayerInfo {
 	return gd.info
 }
 
-func (gd *groupDrawer) Bounds() image.Rectangle {
-	return gd.image.Bounds()
+func (gd *groupDrawer) Image() *ebiten.Image {
+	for _, child := range gd.children {
+		err := child.Draw(gd.image)
+		if err != nil {
+			return nil
+		}
+	}
+	return gd.image
 }
 
 func (gd *groupDrawer) Update() error {
