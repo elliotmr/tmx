@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
+	"io"
 )
 
 // Map Definition: http://doc.mapeditor.org/en/latest/reference/tmx-map-format/#map
@@ -228,6 +229,10 @@ type Template struct {
 // Load parses a tmx file into a new tmx.Map object, it will also parse any
 // tsx tileset files that are referenced.
 func Load(file *os.File) (*Map, error) {
+	return LoadReader(file, file.Name())
+}
+
+func LoadReader(file io.Reader, fileName string) (*Map, error) {
 	decoder := xml.NewDecoder(file)
 	tmxMap := &Map{}
 	err := decoder.Decode(tmxMap)
@@ -237,7 +242,7 @@ func Load(file *os.File) (*Map, error) {
 			if filepath.IsAbs(ts.Source) {
 				source = ts.Source
 			} else {
-				source = filepath.Join(filepath.Dir(file.Name()), ts.Source)
+				source = filepath.Join(filepath.Dir(fileName), ts.Source)
 			}
 			tsxFile, err := os.Open(source)
 			if err != nil {
